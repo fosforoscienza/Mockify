@@ -227,7 +227,12 @@ export class MockupViewer {
   }
 
   private applySlot(runtime: SlotRuntime) {
-    const matrix = computeUvMatrix(runtime.def.area, runtime.aspect, runtime.transform)
+    const matrix = computeUvMatrix(
+      runtime.def.area,
+      runtime.aspect,
+      runtime.transform,
+      runtime.def.fullBleed,
+    )
     runtime.def.meshes.forEach((mesh) => {
       const mat = artworkMaterialOf(mesh)
       mat.map = runtime.texture ?? null
@@ -262,7 +267,12 @@ export class MockupViewer {
     const hits = this.raycaster.intersectObjects(runtime.def.meshes, false)
     for (const hit of hits) {
       if (!hit.uv) continue
-      const m = computeUvMatrix(runtime.def.area, runtime.aspect, runtime.transform)
+      const m = computeUvMatrix(
+        runtime.def.area,
+        runtime.aspect,
+        runtime.transform,
+        runtime.def.fullBleed,
+      )
       const p = new THREE.Vector3(hit.uv.x, hit.uv.y, 1).applyMatrix3(m)
       if (p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1) {
         return { runtime, u: hit.uv.x, v: hit.uv.y }

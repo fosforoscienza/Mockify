@@ -28,12 +28,22 @@ export interface PrintAreaSize {
   height: number
 }
 
-/** Dimensione della grafica (unità scena) data l'area di stampa e l'aspect dell'immagine. */
-export function artworkSize(area: PrintAreaSize, imageAspect: number, scale: number) {
+/**
+ * Dimensione della grafica (unità scena) data l'area di stampa e l'aspect
+ * dell'immagine. Con `cover` la grafica riempie l'area e deborda sul lato
+ * lungo, invece di restarci inscritta lasciando due bande: è quello che
+ * serve dove la stampa copre tutto il supporto — poster, copertine, schermi.
+ */
+export function artworkSize(
+  area: PrintAreaSize,
+  imageAspect: number,
+  scale: number,
+  cover = false,
+) {
   const areaAspect = area.width / area.height
   let w: number
   let h: number
-  if (imageAspect >= areaAspect) {
+  if ((imageAspect >= areaAspect) !== cover) {
     w = area.width * scale
     h = w / imageAspect
   } else {
@@ -52,9 +62,10 @@ export function computeUvMatrix(
   area: PrintAreaSize,
   imageAspect: number,
   t: ArtTransform,
+  cover = false,
   target = new THREE.Matrix3(),
 ) {
-  const { w, h } = artworkSize(area, imageAspect, t.scale)
+  const { w, h } = artworkSize(area, imageAspect, t.scale, cover)
   const tx = t.offsetX * area.width * 0.5
   const ty = t.offsetY * area.height * 0.5
   const cos = Math.cos(-t.rotation)
@@ -89,8 +100,9 @@ export function surfaceUvToImageUv(
   t: ArtTransform,
   u: number,
   v: number,
+  cover = false,
 ) {
-  const m = computeUvMatrix(area, imageAspect, t)
+  const m = computeUvMatrix(area, imageAspect, t, cover)
   const p = new THREE.Vector3(u, v, 1).applyMatrix3(m)
   return { u: p.x, v: p.y }
 }

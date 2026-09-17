@@ -258,6 +258,8 @@ export function sheetShadowTexture(): THREE.Texture {
  * sono pochi pixel, quindi una texture rende quanto una geometria vera e
  * costa un millesimo.
  */
+export const KEYBOARD_ASPECT = 5.62 / 14.5
+
 export function keyboardTexture(): THREE.Texture {
   const key = 'keyboard'
   if (cache.has(key)) return cache.get(key)!

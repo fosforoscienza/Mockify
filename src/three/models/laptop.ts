@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { deg } from '../geometry'
 import { artworkMesh } from '../slot'
 import { planeSurface } from '../surface'
-import { keyboardTexture, speakerGrilleTexture } from '../textures'
+import { KEYBOARD_ASPECT, keyboardTexture, speakerGrilleTexture } from '../textures'
 import {
   colorHex,
   optionString,
@@ -144,9 +144,20 @@ function slab(w: number, h: number, thickness: number, radius: number, bevel: nu
   return geo
 }
 
-/** Piano sottile con angoli raccordati, per i dettagli appoggiati sul piano. */
+/**
+ * Piano sottile con angoli raccordati, per i dettagli appoggiati sulla scocca.
+ * ShapeGeometry scrive nelle UV le coordinate della forma, non 0–1: senza
+ * rinormalizzarle la texture della tastiera finisce fuori scala.
+ */
 function panel(w: number, h: number, radius: number) {
   const geo = new THREE.ShapeGeometry(roundedRect(w, h, radius), 10)
+  const pos = geo.attributes.position
+  const uv = new Float32Array(pos.count * 2)
+  for (let i = 0; i < pos.count; i++) {
+    uv[i * 2] = pos.getX(i) / w + 0.5
+    uv[i * 2 + 1] = pos.getY(i) / h + 0.5
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2))
   geo.rotateX(-Math.PI / 2)
   return geo
 }
@@ -154,8 +165,8 @@ function panel(w: number, h: number, radius: number) {
 function aluminium(hex: string) {
   return new THREE.MeshStandardMaterial({
     color: new THREE.Color(hex),
-    roughness: 0.42,
-    metalness: 0.62,
+    roughness: 0.46,
+    metalness: 0.28,
   })
 }
 
@@ -203,9 +214,11 @@ function build(cfg: BuildConfig): BuiltMockup {
 
   // --------------------------------------------------- tastiera e trackpad
   const deckY = baseH + mm(0.05)
-  const kbW = w - mm(size.id === '14' ? 32 : 46)
-  const kbH = kbW * 0.405
-  const kbTop = -d / 2 + mm(14)
+  // il blocco tasti occupa la parte centrale del piano: ai lati restano le
+  // griglie degli altoparlanti, larghe quanto sul portatile vero
+  const kbW = w * 0.72
+  const kbH = kbW * KEYBOARD_ASPECT
+  const kbTop = -d / 2 + mm(15)
 
   const well = new THREE.Mesh(
     track(panel(kbW + mm(4), kbH + mm(4), mm(3))),
@@ -229,18 +242,18 @@ function build(cfg: BuildConfig): BuiltMockup {
 
   const grilleTex = speakerGrilleTexture().clone()
   grilleTex.needsUpdate = true
-  grilleTex.repeat.set(3, 26)
+  grilleTex.repeat.set(4, 22)
   const grille = track(
     new THREE.MeshStandardMaterial({
       map: grilleTex,
       transparent: true,
       roughness: 0.6,
-      metalness: 0.4,
+      metalness: 0.25,
       color: new THREE.Color(body),
     }),
   )
   disposables.push(grilleTex)
-  const grilleW = (w - kbW) / 2 - mm(9)
+  const grilleW = (w - kbW) / 2 - mm(11)
   const grilleGeo = track(panel(grilleW, kbH, mm(2)))
   for (const sx of [-1, 1]) {
     const g = new THREE.Mesh(grilleGeo, grille)
@@ -255,8 +268,8 @@ function build(cfg: BuildConfig): BuiltMockup {
     track(
       new THREE.MeshStandardMaterial({
         color: new THREE.Color(body).multiplyScalar(0.94),
-        roughness: 0.3,
-        metalness: 0.45,
+        roughness: 0.34,
+        metalness: 0.2,
       }),
     ),
   )
