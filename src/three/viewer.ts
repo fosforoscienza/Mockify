@@ -231,6 +231,7 @@ export class MockupViewer {
     runtime.def.meshes.forEach((mesh) => {
       const mat = artworkMaterialOf(mesh)
       mat.map = runtime.texture ?? null
+      if (mat.userData.glow > 0) mat.emissiveMap = runtime.texture ?? null
       mat.opacity = runtime.transform.opacity
       mat.needsUpdate = true
       mat.userData.setUvMatrix(matrix)

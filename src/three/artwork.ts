@@ -99,12 +99,19 @@ export interface ArtworkMaterialOptions {
   /** Materiale opaco: usato per poster e stampati dove la grafica copre il supporto. */
   roughness?: number
   metalness?: number
+  /**
+   * Schermo acceso: la grafica illumina anche sé stessa, invece di dipendere
+   * solo dalle luci della scena. 0 = stampa opaca su un supporto.
+   */
+  glow?: number
 }
 
 export interface ArtworkMaterial extends THREE.MeshStandardMaterial {
   userData: {
     uvMatrix: THREE.Matrix3
     setUvMatrix(m: THREE.Matrix3): void
+    /** Se > 0 la stessa texture va anche sulla emissiveMap. */
+    glow: number
   }
 }
 
@@ -114,6 +121,7 @@ export interface ArtworkMaterial extends THREE.MeshStandardMaterial {
  * grafica appare davvero stampata sul supporto.
  */
 export function createArtworkMaterial(opts: ArtworkMaterialOptions = {}) {
+  const glow = opts.glow ?? 0
   const mat = new THREE.MeshStandardMaterial({
     transparent: true,
     roughness: opts.roughness ?? 0.85,
@@ -124,6 +132,8 @@ export function createArtworkMaterial(opts: ArtworkMaterialOptions = {}) {
     polygonOffsetUnits: -6,
     depthWrite: true,
     toneMapped: true,
+    emissive: new THREE.Color(glow > 0 ? 0xffffff : 0x000000),
+    emissiveIntensity: glow,
   }) as ArtworkMaterial
 
   const uvMatrix = new THREE.Matrix3()
@@ -148,6 +158,20 @@ export function createArtworkMaterial(opts: ArtworkMaterialOptions = {}) {
         #endif
         `,
       )
+    // Lo schermo acceso riusa la stessa texture come emissiva: senza questa
+    // sostituzione three la campionerebbe con le UV non trasformate, e la
+    // luce dello schermo non seguirebbe la grafica.
+    if (glow > 0) {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <emissivemap_fragment>',
+        `
+        #ifdef USE_EMISSIVEMAP
+          vec2 artEmissiveUv = clamp( ( uArtMatrix * vec3( vEmissiveMapUv, 1.0 ) ).xy, 0.0, 1.0 );
+          totalEmissiveRadiance *= texture2D( emissiveMap, artEmissiveUv ).rgb;
+        #endif
+        `,
+      )
+    }
   }
 
   mat.userData = {
@@ -155,8 +179,9 @@ export function createArtworkMaterial(opts: ArtworkMaterialOptions = {}) {
     setUvMatrix(m: THREE.Matrix3) {
       uvMatrix.copy(m)
     },
+    glow,
   }
-  mat.customProgramCacheKey = () => 'mockify-artwork'
+  mat.customProgramCacheKey = () => (glow > 0 ? 'mockify-artwork-glow' : 'mockify-artwork')
   return mat
 }
 

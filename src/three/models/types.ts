@@ -62,7 +62,7 @@ export interface BuildConfig {
 export interface MockupDefinition {
   id: string
   name: string
-  category: 'abbigliamento' | 'stampa' | 'editoria'
+  category: 'abbigliamento' | 'stampa' | 'editoria' | 'digitale'
   tagline: string
   description: string
   icon: string

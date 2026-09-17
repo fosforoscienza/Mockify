@@ -1,6 +1,7 @@
 import { book } from './book'
 import { brochure } from './brochure'
 import { cap } from './cap'
+import { laptop } from './laptop'
 import { poster } from './poster'
 import { sheets } from './sheets'
 import { hoodieFlat, tshirtFlat } from '../../flat/model'
@@ -14,12 +15,14 @@ export const MOCKUPS: MockupDefinition[] = [
   poster,
   brochure,
   book,
+  laptop,
 ]
 
 export const CATEGORIES: { id: MockupDefinition['category']; label: string }[] = [
   { id: 'abbigliamento', label: 'Abbigliamento' },
   { id: 'stampa', label: 'Stampati' },
   { id: 'editoria', label: 'Editoria' },
+  { id: 'digitale', label: 'Digitale' },
 ]
 
 export function getMockup(id: string) {

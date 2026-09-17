@@ -227,6 +227,16 @@ export function BackgroundIcon({ size = 24 }: IconProps) {
   )
 }
 
+export function LaptopIcon({ size = 24 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M6.4 6.2h11.2a1 1 0 0 1 1 1v8.1H5.4V7.2a1 1 0 0 1 1-1z" />
+      <path d="M3.2 15.3h17.6l-1.1 2.1a1 1 0 0 1-.9.5H5.2a1 1 0 0 1-.9-.5z" />
+      <path d="M10.6 6.2h2.8" />
+    </svg>
+  )
+}
+
 export const MOCKUP_ICONS: Record<string, (p: IconProps) => JSX.Element> = {
   tshirt: TshirtIcon,
   hoodie: HoodieIcon,
@@ -235,6 +245,7 @@ export const MOCKUP_ICONS: Record<string, (p: IconProps) => JSX.Element> = {
   poster: PosterIcon,
   brochure: BrochureIcon,
   book: BookIcon,
+  laptop: LaptopIcon,
 }
 
 export function MockupIcon({ name, size = 24 }: IconProps & { name: string }) {

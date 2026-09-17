@@ -252,6 +252,104 @@ export function sheetShadowTexture(): THREE.Texture {
   return tex
 }
 
+/**
+ * Tastiera di un portatile: file di tasti con le larghezze reali della
+ * disposizione Mac, disegnate una volta sola. A dimensione di mockup i tasti
+ * sono pochi pixel, quindi una texture rende quanto una geometria vera e
+ * costa un millesimo.
+ */
+export function keyboardTexture(): THREE.Texture {
+  const key = 'keyboard'
+  if (cache.has(key)) return cache.get(key)!
+  // larghezze in "unità tasto"; ogni fila somma a 14.5
+  const rows: { h: number; keys: number[] }[] = [
+    { h: 0.62, keys: [1.5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] },
+    { h: 1, keys: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.5] },
+    { h: 1, keys: [1.5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] },
+    { h: 1, keys: [1.75, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1.75] },
+    { h: 1, keys: [2.25, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2.25] },
+    { h: 1, keys: [1, 1, 1, 1.25, 5, 1.25, 1] },
+  ]
+  const UNITS = 14.5
+  const GAP = 0.075
+  const width = 1536
+  const unit = width / UNITS
+  const height = Math.round(unit * rows.reduce((t, r) => t + r.h, 0))
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')!
+  ctx.fillStyle = '#0e1013'
+  ctx.fillRect(0, 0, width, height)
+
+  const pad = (GAP / 2) * unit
+  const drawKey = (x: number, y: number, w: number, h: number) => {
+    const r = Math.min(w, h) * 0.16
+    ctx.beginPath()
+    ctx.roundRect(x + pad, y + pad, w - pad * 2, h - pad * 2, r)
+    ctx.fillStyle = '#2d3037'
+    ctx.fill()
+    // luce radente sul bordo alto del tasto
+    ctx.beginPath()
+    ctx.roundRect(x + pad, y + pad, w - pad * 2, (h - pad * 2) * 0.45, r)
+    ctx.fillStyle = 'rgba(255,255,255,0.05)'
+    ctx.fill()
+  }
+
+  let y = 0
+  rows.forEach((row, i) => {
+    const h = row.h * unit
+    let x = 0
+    row.keys.forEach((kw) => {
+      drawKey(x, y, kw * unit, h)
+      x += kw * unit
+    })
+    // ultima fila: il blocco frecce occupa le 3 unità rimaste, con su e giù
+    // affiancate a mezza altezza
+    if (i === rows.length - 1) {
+      drawKey(x, y, unit, h)
+      drawKey(x + unit, y, unit, h / 2)
+      drawKey(x + unit, y + h / 2, unit, h / 2)
+      drawKey(x + unit * 2, y, unit, h)
+    }
+    y += h
+  })
+
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 8
+  cache.set(key, tex)
+  return tex
+}
+
+/**
+ * Griglia degli altoparlanti: fori scuri su fondo trasparente, così sotto
+ * resta il colore della scocca qualunque finitura sia stata scelta.
+ */
+export function speakerGrilleTexture(): THREE.Texture {
+  const key = 'speaker-grille'
+  if (cache.has(key)) return cache.get(key)!
+  const size = 64
+  const canvas = makeCanvas(size)
+  const ctx = canvas.getContext('2d')!
+  ctx.clearRect(0, 0, size, size)
+  ctx.fillStyle = 'rgba(12,14,17,0.82)'
+  const step = size / 8
+  for (let y = 0; y < 8; y++) {
+    for (let x = 0; x < 8; x++) {
+      ctx.beginPath()
+      ctx.arc((x + 0.5) * step, (y + 0.5) * step, step * 0.24, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  }
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+  tex.anisotropy = 8
+  cache.set(key, tex)
+  return tex
+}
+
 export function disposeTextureCache() {
   cache.forEach((t) => t.dispose())
   cache.clear()

@@ -5,6 +5,8 @@ import { buildSurfaceGeometry, type SurfaceFn, type SurfaceOptions } from './sur
 export interface ArtworkMeshOptions extends SurfaceOptions {
   roughness?: number
   metalness?: number
+  /** Schermo acceso: vedi createArtworkMaterial. */
+  glow?: number
   /** Identificativo dello slot a cui la mesh appartiene. */
   slot: string
 }
@@ -21,7 +23,11 @@ export function artworkMesh(fn: SurfaceFn, opts: ArtworkMeshOptions) {
     flip: opts.flip,
     mirrorU: opts.mirrorU,
   })
-  const mat = createArtworkMaterial({ roughness: opts.roughness, metalness: opts.metalness })
+  const mat = createArtworkMaterial({
+    roughness: opts.roughness,
+    metalness: opts.metalness,
+    glow: opts.glow,
+  })
   const mesh = new THREE.Mesh(geo, mat)
   mesh.visible = false
   mesh.renderOrder = 2

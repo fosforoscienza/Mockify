@@ -37,19 +37,35 @@ Per il manifesto il nome della versione porta anche il formato, così i due
 formati restano separati. Se ti servono più versioni di quelle create, aggiungi
 pure `05`, `06`… con lo stesso schema.
 
-## Requisiti dei file
+## Due tipi di base
 
-- **PNG con sfondo trasparente** (canale alpha), non JPEG: i mockup non hanno
-  sfondo, quindi il prodotto va già scontornato.
-- **Lato lungo almeno 2000 px**, meglio 3000: l'export arriva a 300 dpi.
+**Prodotto scontornato** — capi, cappelli, telefono. Il mockup non ha sfondo:
+l'oggetto galleggia e l'utente sceglie lui il colore di fondo.
+
+- **PNG con sfondo trasparente** (canale alpha), non JPEG.
 - **Prodotto bianco o grigio chiaro neutro.** È il requisito più importante per
   i capi: da una base chiara ricavo qualunque colore mantenendo pieghe e ombre,
-  da una base scura no. Per telefono e manifesto non conta.
+  da una base scura no.
 - **Ripresa frontale o in tre quarti netti**, prodotto centrato, senza manichino
   visibile e **senza ombra sul fondo**: l'ombra la aggiunge l'app, così resta
   coerente con lo sfondo scelto.
 - Pieghe e ombre del tessuto devono essere ben leggibili: sono quelle che l'app
   riusa per far seguire alla stampa l'andamento del capo.
+
+**Scena in ambiente** — manifesti. Qui lo sfondo è il punto: l'affissione sotto
+il cavalcavia, i due poster sul muro. La foto va tenuta intera, con luci e
+ombre; l'app sostituisce solo il pannello bianco.
+
+- JPEG o PNG vanno bene, lo sfondo resta.
+- Il pannello da sostituire deve essere **chiaro e uniforme**, con sopra le
+  ombre della scena: sono quelle che riporto sulla grafica, ed è ciò che fa
+  sembrare il manifesto davvero affisso lì.
+- Niente oggetti davanti al pannello.
+
+## Per tutti
+
+- **Lato lungo almeno 2000 px**, meglio 3000: l'export arriva a 300 dpi. I file
+  `_low` a 2000 px vanno bene per provare; se hai le versioni piene, caricale.
 
 ## PSD o PNG?
 
