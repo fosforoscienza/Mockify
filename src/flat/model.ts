@@ -14,7 +14,7 @@ export interface FlatConfig {
  * I nomi sono descrittivi: lo scopo è riconoscere il campione, non citare la
  * denominazione commerciale.
  */
-const GARMENT_COLORS = [
+export const GARMENT_COLORS = [
   { id: 'e150-41', label: 'Bianco', hex: '#ededed' },
   { id: 'e150-01', label: 'Nero carbone', hex: '#2b2926', dark: true },
   { id: 'e150-02', label: 'Blu notte', hex: '#141033', dark: true },

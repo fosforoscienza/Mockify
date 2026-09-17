@@ -1,16 +1,16 @@
 import { book } from './book'
 import { brochure } from './brochure'
-import { cap } from './cap'
 import { laptop } from './laptop'
 import { poster } from './poster'
 import { sheets } from './sheets'
 import { hoodieFlat, tshirtFlat } from '../../flat/model'
+import { PHOTO_MOCKUPS } from '../../photo/model'
 import type { BuildConfig, MockupDefinition } from './types'
 
 export const MOCKUPS: MockupDefinition[] = [
+  ...PHOTO_MOCKUPS,
   tshirtFlat,
   hoodieFlat,
-  cap,
   sheets,
   poster,
   brochure,

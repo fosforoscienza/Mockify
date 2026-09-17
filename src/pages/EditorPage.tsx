@@ -4,6 +4,9 @@ import MockupList from '../components/MockupList'
 import Toolbar from '../components/Toolbar'
 import Viewport, { type SlotInfo } from '../components/Viewport'
 import FlatViewport, { type MockupSurface } from '../components/FlatViewport'
+import PhotoViewport from '../components/PhotoViewport'
+import { photoSlots } from '../photo/model'
+import type { ArtTransform } from '../three/artwork'
 import ArtworkPanel from '../components/ArtworkPanel'
 import ExportPanel, { type ExportFormat } from '../components/ExportPanel'
 import ScenePanel from '../components/ScenePanel'
@@ -33,6 +36,7 @@ export default function EditorPage() {
 
   const model = getMockup(state.activeModel) ?? MOCKUPS[0]
   const flat = model.flat
+  const photo = model.photo
   const ms = modelState(state)
   const cfg = ms.cfg
   const cfgKey = useMemo(() => JSON.stringify(cfg), [cfg])
@@ -69,6 +73,22 @@ export default function EditorPage() {
     setSlots(flat.slots.map((s) => ({ id: s.id, label: s.label, hint: s.hint })))
   }, [flat])
 
+  // sui mockup su foto gli slot vengono dalle aree della variante scelta
+  const photoSlotList = useMemo(
+    () => (photo ? photoSlots(photo, cfg.variant) : []),
+    [photo, cfg.variant],
+  )
+  useEffect(() => {
+    if (!photo) return
+    setSlots(photoSlotList.map((s) => ({ id: s.id, label: s.label, hint: s.hint })))
+  }, [photo, photoSlotList])
+
+  // la foto mostrata è quella che contiene l'area su cui si sta lavorando
+  const photoViewIndex = useMemo(
+    () => photoSlotList.find((s) => s.id === state.activeSlot)?.viewIndex ?? 0,
+    [photoSlotList, state.activeSlot],
+  )
+
   // vista e area di stampa restano allineate: cambiando l'una cambia l'altra
   useEffect(() => {
     if (!flat || !state.activeSlot || view === 'both') return
@@ -90,10 +110,10 @@ export default function EditorPage() {
 
   // ricostruzione del mockup 3D a ogni cambio di modello, variante, colore o opzione
   useEffect(() => {
-    if (!ready || !viewerRef.current || flat) return
+    if (!ready || !viewerRef.current || flat || photo) return
     viewerRef.current.setMockup(model, cfg, false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, model.id, cfgKey, flat])
+  }, [ready, model.id, cfgKey, flat, photo])
 
   // la prima area di stampa diventa attiva quando il modello cambia
   useEffect(() => {
@@ -168,6 +188,16 @@ export default function EditorPage() {
     return { front: pick('front'), back: pick('back') }
   }, [flat, state])
 
+  const photoArtworks = useMemo(() => {
+    const out: Record<string, { image: HTMLImageElement; transform: ArtTransform } | null> = {}
+    for (const slot of photoSlotList) {
+      const st = slotState(state, slot.id)
+      const image = st.imageId ? state.images[st.imageId] : null
+      out[slot.id] = image ? { image: image.element, transform: st.transform } : null
+    }
+    return out
+  }, [photoSlotList, state])
+
   const filledSlots = useMemo(
     () => new Set(slots.filter((s) => slotState(state, s.id).imageId).map((s) => s.id)),
     [slots, state],
@@ -227,7 +257,25 @@ export default function EditorPage() {
           onColor={(color) => dispatch({ type: 'set-color', color })}
           onOption={(option, value) => dispatch({ type: 'set-option', option, value })}
         />
-        {flat ? (
+        {photo ? (
+          <PhotoViewport
+            photo={photo}
+            variantId={cfg.variant}
+            viewIndex={photoViewIndex}
+            color={photo.recolor ? cfg.color : null}
+            background={background}
+            artworks={photoArtworks}
+            slotId={state.activeSlot}
+            onReady={(surface) => {
+              surfaceRef.current = surface
+              setReady(true)
+            }}
+            onDragTransform={(slot, offsetX, offsetY) =>
+              dispatch({ type: 'patch-transform', slot, patch: { offsetX, offsetY } })
+            }
+            onDropImage={(file) => void handleFile(file)}
+          />
+        ) : flat ? (
           <FlatViewport
             flat={flat}
             view={view}
