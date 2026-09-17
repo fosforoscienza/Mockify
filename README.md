@@ -1,5 +1,7 @@
 # Mockify
 
+**In produzione: https://mockify-murex.vercel.app**
+
 Generatore di mockup 3D che funziona interamente nel browser: carichi le tue
 grafiche in PNG o JPG, Mockify le adatta al modello scelto seguendo le pieghe
 del tessuto e della carta, e le esporta in **PNG con sfondo trasparente** o in
@@ -40,8 +42,9 @@ Nessun server, nessuna registrazione: le immagini non lasciano il computer.
 Il repository contiene `vercel.json` già pronto: framework Vite, build
 `npm run build`, output in `dist/`, rewrite di tutte le rotte su `index.html`
 (l'app usa URL puliti tipo `/crea?m=poster`) e cache immutabile sugli asset.
-Collegando il repo a un progetto Vercel, ogni push sul branch di produzione
-pubblica una nuova versione. Non servono variabili d'ambiente: l'app è
+Il repo è collegato al progetto Vercel `mockify`: ogni push sul branch di
+produzione (`main`) pubblica una nuova versione, gli altri branch ottengono un
+deploy di anteprima. Non servono variabili d'ambiente: l'app è
 interamente statica e lavora nel browser.
 
 ## Avvio
