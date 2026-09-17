@@ -77,6 +77,24 @@ function smoothstep(a: number, b: number, x: number) {
   return t * t * (3 - 2 * t)
 }
 
+/** Tetto al buffer della grafica: oltre non si guadagna nitidezza, si perde tempo. */
+const MAX_ART_BUFFER = 4096
+
+/**
+ * Debordo dell'area di stampa. Gli spigoli sono rilevati sul confine della
+ * regione chiara, che la soglia erode sempre di un pixel o due: senza questo
+ * margine resta un filo di pannello scoperto lungo i bordi. Su una stampa vera
+ * è anche il comportamento giusto, il manifesto va sotto la cornice.
+ */
+const OVERFILL = 1.015
+
+/** Allarga il quadrilatero attorno al proprio centro. */
+function expandQuad(quad: Quad, k: number): Quad {
+  const cx = (quad[0][0] + quad[1][0] + quad[2][0] + quad[3][0]) / 4
+  const cy = (quad[0][1] + quad[1][1] + quad[2][1] + quad[3][1]) / 4
+  return quad.map(([x, y]) => [cx + (x - cx) * k, cy + (y - cy) * k]) as Quad
+}
+
 const clamp255 = (v: number) => (v < 0 ? 0 : v > 255 ? 255 : v)
 
 /**
@@ -111,7 +129,7 @@ export class PhotoMockupRenderer {
 
     this.lastAreas = []
     for (const area of opts.view.areas) {
-      const matrix = squareToQuad(area.quad, base.w, base.h)
+      const matrix = squareToQuad(expandQuad(area.quad, OVERFILL), base.w, base.h)
       const inverse = invert3(matrix)
       this.lastAreas.push({ id: area.id, matrix, inverse })
       const art = opts.artworks[area.id]
@@ -227,7 +245,6 @@ export class PhotoMockupRenderer {
     inverse: number[],
     art: PhotoArtwork,
   ) {
-    // la grafica viene rasterizzata una volta alla risoluzione dell'area
     const xs = area.quad.map((p) => p[0] * base.w)
     const ys = area.quad.map((p) => p[1] * base.h)
     const minX = Math.max(0, Math.floor(Math.min(...xs)))
@@ -235,15 +252,6 @@ export class PhotoMockupRenderer {
     const minY = Math.max(0, Math.floor(Math.min(...ys)))
     const maxY = Math.min(base.h - 1, Math.ceil(Math.max(...ys)))
     if (maxX <= minX || maxY <= minY) return
-
-    const aw = Math.max(2, maxX - minX)
-    const ah = Math.max(2, maxY - minY)
-    this.artCanvas.width = aw
-    this.artCanvas.height = ah
-    const ac = this.artCanvas.getContext('2d', { willReadFrequently: true })!
-    ac.clearRect(0, 0, aw, ah)
-    ac.drawImage(art.source, 0, 0, aw, ah)
-    const src = ac.getImageData(0, 0, aw, ah).data
 
     const t = art.transform
     const imageAspect = art.width / art.height
@@ -274,6 +282,23 @@ export class PhotoMockupRenderer {
     const shadeAmount = area.shade ?? 1
     const dst = out.data
 
+    // Risoluzione del buffer della grafica: quella che serve alla porzione
+    // davvero visibile, non quella del riquadro che contiene il quadrilatero.
+    // L'area copre 1/fw della larghezza dell'immagine su quadW pixel, quindi
+    // l'immagine intera a quell'ingrandimento vuole quadW * fw pixel. Con una
+    // foto orizzontale su uno schermo verticale la differenza è di tre volte,
+    // ed è il motivo per cui la grafica usciva sgranata.
+    const bufW = Math.max(2, Math.min(art.width, MAX_ART_BUFFER, Math.ceil(quadW * fw)))
+    const bufH = Math.max(2, Math.min(art.height, MAX_ART_BUFFER, Math.ceil(quadH * fh)))
+    this.artCanvas.width = bufW
+    this.artCanvas.height = bufH
+    const ac = this.artCanvas.getContext('2d', { willReadFrequently: true })!
+    ac.clearRect(0, 0, bufW, bufH)
+    ac.imageSmoothingEnabled = true
+    ac.imageSmoothingQuality = 'high'
+    ac.drawImage(art.source, 0, 0, bufW, bufH)
+    const src = ac.getImageData(0, 0, bufW, bufH).data
+
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
         const i = y * base.w + x
@@ -294,16 +319,33 @@ export class PhotoMockupRenderer {
         const iv = rv / fh + 0.5
         if (t.flipX) iu = 1 - iu
         if (iu < 0 || iu > 1 || iv < 0 || iv > 1) continue
-        const sx = Math.min(aw - 1, (iu * aw) | 0)
-        const sy = Math.min(ah - 1, (iv * ah) | 0)
-        const si = (sy * aw + sx) * 4
-        const sa = (src[si + 3] / 255) * t.opacity
+        // bilineare: col campionamento al pixel più vicino la grafica si
+        // sgranava, perché un pixel dell'area quasi mai cade su uno dell'immagine
+        const fx = iu * (bufW - 1)
+        const fy = iv * (bufH - 1)
+        const sx = fx | 0
+        const sy = fy | 0
+        const sx1 = sx + 1 < bufW ? sx + 1 : sx
+        const sy1 = sy + 1 < bufH ? sy + 1 : sy
+        const tx = fx - sx
+        const ty = fy - sy
+        const i00 = (sy * bufW + sx) * 4
+        const i10 = (sy * bufW + sx1) * 4
+        const i01 = (sy1 * bufW + sx) * 4
+        const i11 = (sy1 * bufW + sx1) * 4
+        const w00 = (1 - tx) * (1 - ty)
+        const w10 = tx * (1 - ty)
+        const w01 = (1 - tx) * ty
+        const w11 = tx * ty
+        const mix = (o: number) =>
+          src[i00 + o] * w00 + src[i10 + o] * w10 + src[i01 + o] * w01 + src[i11 + o] * w11
+        const sa = (mix(3) / 255) * t.opacity
         if (sa < 0.004) continue
         const lit = 1 - shadeAmount + shadeAmount * base.shade[i]
         const di = i * 4
-        dst[di] = clamp255(dst[di] * (1 - sa) + src[si] * lit * sa)
-        dst[di + 1] = clamp255(dst[di + 1] * (1 - sa) + src[si + 1] * lit * sa)
-        dst[di + 2] = clamp255(dst[di + 2] * (1 - sa) + src[si + 2] * lit * sa)
+        dst[di] = clamp255(dst[di] * (1 - sa) + mix(0) * lit * sa)
+        dst[di + 1] = clamp255(dst[di + 1] * (1 - sa) + mix(1) * lit * sa)
+        dst[di + 2] = clamp255(dst[di + 2] * (1 - sa) + mix(2) * lit * sa)
       }
     }
   }

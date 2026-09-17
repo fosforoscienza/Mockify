@@ -279,7 +279,7 @@ export const MANIFESTO_PHOTO: PhotoConfig = {
             {
               id: 'fronte',
               label: 'Manifesto',
-              quad: [[0.212, 0.304], [0.8, 0.409], [0.782, 0.73], [0.198, 0.737]],
+              quad: [[0.212, 0.304], [0.809, 0.409], [0.818, 0.731], [0.198, 0.737]],
               hint: '6 × 3 m',
               fill: 'cover',
             },
