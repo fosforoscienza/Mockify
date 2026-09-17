@@ -4,6 +4,7 @@ import { deg } from '../geometry'
 import { meshAlphaTexture } from '../textures'
 import { artworkMesh } from '../slot'
 import { buildSheetGeometry, buildSurfaceGeometry, type SurfaceFn } from '../surface'
+import { colorHex } from './types'
 import type { BuildConfig, BuiltMockup, MockupDefinition, SlotDefinition } from './types'
 
 interface CapShape {
@@ -127,7 +128,7 @@ function visorSurface(s: CapShape): SurfaceFn {
 function build(cfg: BuildConfig): BuiltMockup {
   const variant = VARIANTS[cfg.variant] ?? VARIANTS.baseball
   const s: CapShape = { ...baseShape(), ...variant.shape }
-  const color = COLORS.find((c) => c.id === cfg.color) ?? COLORS[0]
+  const color = { hex: colorHex(cfg, COLORS) }
   const group = new THREE.Group()
 
   const cloth = fabricMaterial(color.hex, 'jersey')

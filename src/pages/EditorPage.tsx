@@ -5,6 +5,7 @@ import Toolbar from '../components/Toolbar'
 import Viewport, { type SlotInfo } from '../components/Viewport'
 import ArtworkPanel from '../components/ArtworkPanel'
 import ExportPanel, { type ExportFormat } from '../components/ExportPanel'
+import ScenePanel from '../components/ScenePanel'
 import { CheckIcon, WarningIcon } from '../components/Icons'
 import { getMockup, MOCKUPS } from '../three/models'
 import type { MockupViewer } from '../three/viewer'
@@ -22,6 +23,8 @@ export default function EditorPage() {
   const [slots, setSlots] = useState<SlotInfo[]>([])
   const [toast, setToast] = useState<{ text: string; kind: 'ok' | 'error' } | null>(null)
   const [leaveTo, setLeaveTo] = useState<string | null>(null)
+  const [background, setBackground] = useState<string | null>(null)
+  const [shadow, setShadow] = useState(true)
   const viewerRef = useRef<MockupViewer | null>(null)
   const [ready, setReady] = useState(false)
 
@@ -138,14 +141,14 @@ export default function EditorPage() {
   )
 
   const handleExport = useCallback(
-    async (format: ExportFormat, longSide: number) => {
+    async (format: ExportFormat, longSide: number, withBackground: boolean) => {
       const viewer = viewerRef.current
       if (!viewer) return
       const canvas = viewer.renderer.domElement
       const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight)
       const pxW = aspect >= 1 ? longSide : Math.round(longSide * aspect)
       const pxH = aspect >= 1 ? Math.round(longSide / aspect) : longSide
-      const url = viewer.snapshot(pxW, pxH)
+      const url = viewer.snapshot(pxW, pxH, withBackground ? background : null)
       const name = safeFilename(['mockify', model.name, cfg.variant])
       if (format === 'png') {
         downloadDataUrl(url, `${name}.png`)
@@ -154,7 +157,7 @@ export default function EditorPage() {
       }
       notify(`File ${format.toUpperCase()} scaricato (${pxW} × ${pxH} px)`)
     },
-    [model.name, cfg.variant, notify],
+    [model.name, cfg.variant, notify, background],
   )
 
   return (
@@ -185,6 +188,8 @@ export default function EditorPage() {
             dispatch({ type: 'patch-transform', slot, patch: { offsetX, offsetY } })
           }
           onDropImage={(file) => void handleFile(file)}
+          background={background}
+          shadow={shadow}
         />
       </section>
 
@@ -216,7 +221,14 @@ export default function EditorPage() {
           onReset={() => activeSlot && dispatch({ type: 'reset-transform', slot: activeSlot })}
         />
 
-        <ExportPanel onExport={handleExport} disabled={!ready} />
+        <ScenePanel
+          background={background}
+          onBackground={setBackground}
+          shadow={shadow}
+          onShadow={setShadow}
+        />
+
+        <ExportPanel onExport={handleExport} disabled={!ready} background={background} />
       </aside>
 
       {toast && (
@@ -244,7 +256,7 @@ export default function EditorPage() {
                 onClick={() => {
                   const target = leaveTo
                   setLeaveTo(null)
-                  void handleExport('png', 2048)
+                  void handleExport('png', 2048, false)
                   window.setTimeout(() => navigate(target), 400)
                 }}
               >

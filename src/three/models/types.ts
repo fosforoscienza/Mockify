@@ -72,6 +72,15 @@ export interface MockupDefinition {
   build(cfg: BuildConfig): BuiltMockup
 }
 
+/**
+ * Colore effettivo del materiale: la configurazione porta direttamente un hex
+ * scelto dall'utente; i preset restano come scorciatoie e fanno da fallback.
+ */
+export function colorHex(cfg: BuildConfig, presets: MaterialColor[] = []) {
+  if (cfg.color && cfg.color.startsWith('#')) return cfg.color
+  return presets.find((c) => c.id === cfg.color)?.hex ?? presets[0]?.hex ?? '#ffffff'
+}
+
 export function optionString(cfg: BuildConfig, id: string, fallback: string): string {
   const v = cfg.options[id]
   return typeof v === 'string' ? v : fallback

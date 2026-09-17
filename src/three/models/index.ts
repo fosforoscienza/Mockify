@@ -27,7 +27,7 @@ export function defaultConfig(model: MockupDefinition): BuildConfig {
   })
   return {
     variant: model.variants[0].id,
-    color: model.colors?.[0]?.id ?? 'white',
+    color: model.colors?.[0]?.hex ?? '#ffffff',
     options,
   }
 }

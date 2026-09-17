@@ -155,17 +155,24 @@ export function maxEdgeLength(geo: THREE.BufferGeometry) {
 }
 
 /**
- * Campo di distanza dal bordo di un poligono, campionato su griglia e
- * interpolato: dà il "gonfiore" del capo senza costare una query per vertice.
+ * Campo di distanza dal bordo di una sagoma (con eventuali fori), campionato su
+ * griglia e interpolato. Da qui nascono sia il volume del capo sia la sua
+ * occlusione ambientale, senza pagare una query per vertice.
  */
 export class DistanceField {
   private data: Float32Array
+  private width?: Float32Array
   private minX: number
   private minY: number
   private stepX: number
   private stepY: number
 
-  constructor(outline: THREE.Vector2[], private res = 150, margin = 0.02) {
+  constructor(
+    outline: THREE.Vector2[],
+    private res = 150,
+    margin = 0.02,
+    holes: THREE.Vector2[][] = [],
+  ) {
     let minX = Infinity
     let minY = Infinity
     let maxX = -Infinity
@@ -186,19 +193,67 @@ export class DistanceField {
       const y = this.minY + j * this.stepY
       for (let i = 0; i < res; i++) {
         const x = this.minX + i * this.stepX
-        this.data[j * res + i] = insidePolygon(outline, x, y)
-          ? distanceToPolygon(outline, x, y)
-          : 0
+        let inside = insidePolygon(outline, x, y)
+        if (inside) {
+          for (const hole of holes) {
+            if (insidePolygon(hole, x, y)) {
+              inside = false
+              break
+            }
+          }
+        }
+        if (!inside) {
+          this.data[j * res + i] = 0
+          continue
+        }
+        let d = distanceToPolygon(outline, x, y)
+        for (const hole of holes) d = Math.min(d, distanceToPolygon(hole, x, y))
+        this.data[j * res + i] = d
       }
     }
     // la distanza ha una cresta netta sull'asse mediano: due passate di
     // sfocatura la addolciscono ed evitano pieghe innaturali sul capo
-    this.blur(2)
+    this.blur(this.data, 2)
   }
 
-  private blur(passes: number) {
+  /**
+   * Semi-larghezza locale del capo: massimo della distanza in una finestra.
+   * Serve a dare alle maniche una sezione sottile e al corpo una piena, invece
+   * di gonfiare tutto allo stesso modo.
+   */
+  localWidth(radius: number) {
+    if (this.width) return
+    const k = Math.max(1, Math.round(radius / this.stepX))
+    const tmp = slidingMax(this.data, this.res, k, true)
+    const out = slidingMax(tmp, this.res, k, false)
+    this.blur(out, 2)
+    this.width = out
+  }
+
+  sample(x: number, y: number) {
+    return this.lookup(this.data, x, y)
+  }
+
+  sampleWidth(x: number, y: number) {
+    return this.width ? this.lookup(this.width, x, y) : this.lookup(this.data, x, y)
+  }
+
+  private lookup(grid: Float32Array, x: number, y: number) {
+    const fx = (x - this.minX) / this.stepX
+    const fy = (y - this.minY) / this.stepY
+    const i = Math.floor(fx)
+    const j = Math.floor(fy)
+    if (i < 0 || j < 0 || i >= this.res - 1 || j >= this.res - 1) return 0
+    const tx = fx - i
+    const ty = fy - j
     const r = this.res
-    const src = this.data
+    const a = grid[j * r + i] * (1 - tx) + grid[j * r + i + 1] * tx
+    const b = grid[(j + 1) * r + i] * (1 - tx) + grid[(j + 1) * r + i + 1] * tx
+    return a * (1 - ty) + b * ty
+  }
+
+  private blur(src: Float32Array, passes: number) {
+    const r = this.res
     for (let p = 0; p < passes; p++) {
       const out = new Float32Array(src.length)
       for (let j = 0; j < r; j++) {
@@ -220,21 +275,30 @@ export class DistanceField {
       src.set(out)
     }
   }
+}
 
-  sample(x: number, y: number) {
-    const fx = (x - this.minX) / this.stepX
-    const fy = (y - this.minY) / this.stepY
-    const i = Math.floor(fx)
-    const j = Math.floor(fy)
-    if (i < 0 || j < 0 || i >= this.res - 1 || j >= this.res - 1) return 0
-    const tx = fx - i
-    const ty = fy - j
-    const d = this.data
-    const r = this.res
-    const a = d[j * r + i] * (1 - tx) + d[j * r + i + 1] * tx
-    const b = d[(j + 1) * r + i] * (1 - tx) + d[(j + 1) * r + i + 1] * tx
-    return a * (1 - ty) + b * ty
+/** Massimo scorrevole su righe o colonne, in tempo lineare (deque monotona). */
+function slidingMax(src: Float32Array, res: number, k: number, horizontal: boolean) {
+  const out = new Float32Array(src.length)
+  const deque = new Int32Array(res)
+  const at = (line: number, i: number) => (horizontal ? line * res + i : i * res + line)
+  for (let line = 0; line < res; line++) {
+    let head = 0
+    let tail = 0
+    for (let i = 0; i < res + k; i++) {
+      if (i < res) {
+        const v = src[at(line, i)]
+        while (tail > head && src[at(line, deque[tail - 1])] <= v) tail--
+        deque[tail++] = i
+      }
+      const center = i - k
+      if (center >= 0) {
+        while (tail > head && deque[head] < center - k) head++
+        out[at(line, center)] = src[at(line, deque[head])]
+      }
+    }
   }
+  return out
 }
 
 function insidePolygon(poly: THREE.Vector2[], x: number, y: number) {

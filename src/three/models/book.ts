@@ -6,6 +6,7 @@ import { artworkMesh } from '../slot'
 import { buildSheetGeometry, type SurfaceFn } from '../surface'
 import { BOOK_FORMATS, findFormat, mm, toScene } from './formats'
 import {
+  colorHex,
   optionNumber,
   optionString,
   type BuildConfig,
@@ -231,7 +232,7 @@ function build(cfg: BuildConfig): BuiltMockup {
   const t = (spineMm / format.h) * h
   const round = optionString(cfg, 'dorso-forma', 'tondo') === 'tondo' ? 1 : 0
   const finish = optionString(cfg, 'finitura', 'patinata') === 'tela' ? 'tela' : 'patinata'
-  const cover = COVERS.find((c) => c.id === cfg.color) ?? COVERS[0]
+  const cover = { hex: colorHex(cfg, COVERS) }
 
   const group = new THREE.Group()
   const board = 0.005

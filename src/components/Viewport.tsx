@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { MockupViewer } from '../three/viewer'
 import type { BuildConfig, MockupDefinition } from '../three/models'
 import { imageFromDataTransfer } from '../lib/image'
-import { CenterIcon, GridIcon, RotateIcon, ShadowIcon } from './Icons'
+import { RotateIcon } from './Icons'
 
 export interface SlotInfo {
   id: string
@@ -18,6 +18,9 @@ interface Props {
   onDragTransform(slot: string, offsetX: number, offsetY: number): void
   onDropImage(file: File): void
   hasArtwork: boolean
+  /** Colore di fondo della scena; null = trasparente (scacchiera). */
+  background: string | null
+  shadow: boolean
 }
 
 export default function Viewport({
@@ -28,12 +31,12 @@ export default function Viewport({
   onDragTransform,
   onDropImage,
   hasArtwork,
+  background,
+  shadow,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<MockupViewer | null>(null)
-  const [checker, setChecker] = useState(true)
-  const [shadow, setShadow] = useState(true)
   const [dropping, setDropping] = useState(false)
 
   const cbRef = useRef({ onSlots, onDragTransform })
@@ -66,6 +69,10 @@ export default function Viewport({
     viewerRef.current?.setShadow(shadow)
   }, [shadow])
 
+  useEffect(() => {
+    viewerRef.current?.setBackground(background)
+  }, [background])
+
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault()
@@ -79,7 +86,7 @@ export default function Viewport({
   return (
     <div
       ref={wrapRef}
-      className={`viewport ${checker ? 'checker' : 'plain'} ${dropping ? 'dropping' : ''}`}
+      className={`viewport ${background ? 'plain' : 'checker'} ${dropping ? 'dropping' : ''}`}
       onDragOver={(e) => {
         e.preventDefault()
         setDropping(true)
@@ -94,37 +101,11 @@ export default function Viewport({
       <div className="viewport-tools">
         <button
           type="button"
-          className={checker ? 'on' : ''}
-          onClick={() => setChecker((v) => !v)}
-          title="Mostra la scacchiera della trasparenza"
-          aria-label="Mostra la scacchiera della trasparenza"
-        >
-          <GridIcon size={17} />
-        </button>
-        <button
-          type="button"
-          className={shadow ? 'on' : ''}
-          onClick={() => setShadow((v) => !v)}
-          title="Ombra a terra nell'esportazione"
-          aria-label="Ombra a terra nell'esportazione"
-        >
-          <ShadowIcon size={17} />
-        </button>
-        <button
-          type="button"
           onClick={() => viewerRef.current?.resetView(model, cfg)}
           title="Reimposta l'inquadratura"
           aria-label="Reimposta l'inquadratura"
         >
           <RotateIcon size={17} />
-        </button>
-        <button
-          type="button"
-          onClick={() => viewerRef.current?.requestRender()}
-          title="Ridisegna la scena"
-          aria-label="Ridisegna la scena"
-        >
-          <CenterIcon size={17} />
         </button>
       </div>
 

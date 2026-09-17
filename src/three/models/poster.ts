@@ -4,7 +4,9 @@ import { deg } from '../geometry'
 import { artworkMesh } from '../slot'
 import { buildSheetGeometry, type SurfaceFn } from '../surface'
 import { POSTER_FORMATS, findFormat, mm, toScene } from './formats'
-import { optionString, type BuildConfig, type BuiltMockup, type MockupDefinition, type SlotDefinition } from './types'
+import {
+colorHex,
+optionString, type BuildConfig, type BuiltMockup, type MockupDefinition, type SlotDefinition } from './types'
 
 type PosterVariant = 'hanger' | 'clips' | 'pins' | 'free'
 
@@ -47,7 +49,7 @@ function build(cfg: BuildConfig): BuiltMockup {
   const variant = (cfg.variant as PosterVariant) ?? 'hanger'
   const format = findFormat(POSTER_FORMATS, optionString(cfg, 'formato', '50x70'))
   const { width: w, height: h } = toScene(format, 0.95)
-  const paperColor = PAPERS.find((pp) => pp.id === cfg.color) ?? PAPERS[0]
+  const paperColor = { hex: colorHex(cfg, PAPERS) }
   const group = new THREE.Group()
 
   const fn = posterSurface(w, h, variant)

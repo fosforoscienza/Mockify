@@ -8,30 +8,50 @@ function track<T extends THREE.Material>(m: T): T {
   return m
 }
 
-export function fabricMaterial(hex: string, kind: 'jersey' | 'fleece' = 'jersey') {
-  const normalMap = kind === 'fleece' ? knitNormalMap(14) : fabricNormalMap(26)
+/**
+ * Tessuto: PBR con "sheen", il termine pensato per i filati. È quello che
+ * distingue una stoffa da una plastica opaca, soprattutto sui bordi in luce.
+ * I vertex color portano l'occlusione ambientale e moltiplicano il colore
+ * scelto, così cambiando tinta restano pieghe e ombre.
+ */
+export function fabricMaterial(
+  hex: string,
+  kind: 'jersey' | 'fleece' = 'jersey',
+  opts: { vertexColors?: boolean; doubleSide?: boolean } = {},
+) {
+  const color = new THREE.Color(hex)
+  const sheenColor = color.clone().lerp(new THREE.Color('#ffffff'), 0.55)
+  const scale = kind === 'fleece' ? 0.42 : 0.32
   return track(
-    new THREE.MeshStandardMaterial({
-      color: new THREE.Color(hex),
-      roughness: kind === 'fleece' ? 0.97 : 0.92,
+    new THREE.MeshPhysicalMaterial({
+      color,
+      roughness: kind === 'fleece' ? 0.96 : 0.9,
       metalness: 0,
-      normalMap,
-      normalScale: new THREE.Vector2(kind === 'fleece' ? 0.38 : 0.3, kind === 'fleece' ? 0.38 : 0.3),
-      side: THREE.FrontSide,
+      sheen: kind === 'fleece' ? 0.7 : 0.45,
+      sheenColor,
+      sheenRoughness: kind === 'fleece' ? 0.85 : 0.6,
+      normalMap: kind === 'fleece' ? knitNormalMap(14) : fabricNormalMap(26),
+      normalScale: new THREE.Vector2(scale, scale),
+      vertexColors: opts.vertexColors ?? false,
+      side: opts.doubleSide ? THREE.DoubleSide : THREE.FrontSide,
     }),
   )
 }
 
-export function ribMaterial(hex: string) {
+export function ribMaterial(hex: string, vertexColors = false) {
   const c = new THREE.Color(hex)
-  c.offsetHSL(0, 0, -0.055)
+  c.offsetHSL(0, 0, -0.045)
   return track(
-    new THREE.MeshStandardMaterial({
+    new THREE.MeshPhysicalMaterial({
       color: c,
-      roughness: 0.98,
+      roughness: 0.97,
       metalness: 0,
+      sheen: 0.7,
+      sheenColor: c.clone().lerp(new THREE.Color('#ffffff'), 0.45),
+      sheenRoughness: 0.7,
       normalMap: knitNormalMap(30),
-      normalScale: new THREE.Vector2(0.7, 0.7),
+      normalScale: new THREE.Vector2(0.8, 0.8),
+      vertexColors,
     }),
   )
 }

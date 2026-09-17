@@ -1,6 +1,6 @@
 import * as THREE from 'three'
-import { fabricMaterial, ribMaterial, threadMaterial } from '../materials'
-import { deg, stitchLine } from '../geometry'
+import { fabricMaterial, ribMaterial } from '../materials'
+import { deg } from '../geometry'
 import { artworkMesh } from '../slot'
 import {
   baseGarment,
@@ -10,6 +10,7 @@ import {
   garmentPrintSurface,
   type GarmentParams,
 } from './garment'
+import { colorHex } from './types'
 import type { BuildConfig, BuiltMockup, MockupDefinition, SlotDefinition } from './types'
 
 const VARIANTS: Record<string, Partial<GarmentParams> & { label: string; description: string }> = {
@@ -77,45 +78,19 @@ function paramsFor(variant: string): GarmentParams {
 
 function build(cfg: BuildConfig): BuiltMockup {
   const p = paramsFor(cfg.variant)
-  const color = COLORS.find((c) => c.id === cfg.color) ?? COLORS[0]
+  const color = { hex: colorHex(cfg, COLORS) }
   const g = garmentGeometry(p)
   const group = new THREE.Group()
 
-  const cloth = fabricMaterial(color.hex, 'jersey')
+  const cloth = fabricMaterial(color.hex, 'jersey', { vertexColors: true, doubleSide: true })
   const body = garmentMesh(g, p, cloth)
   group.add(body)
-  group.add(collarMesh(g, p, ribMaterial(color.hex)))
-
-  // cuciture su orlo e maniche
-  const thread = threadMaterial(color.hex)
-  const hemY = -p.length / 2 + 0.028
-  const hemCurve = new THREE.CatmullRomCurve3(
-    Array.from({ length: 24 }, (_, i) => {
-      const t = i / 23
-      const x = THREE.MathUtils.lerp(-p.hemWidth / 2 + 0.01, p.hemWidth / 2 - 0.01, t)
-      const y = hemY - p.hemCurve * Math.sin(t * Math.PI) * 0.9
-      return new THREE.Vector3(x, y, g.frontZ(x, y) + 0.002)
-    }),
-  )
-  group.add(stitchLine(hemCurve, thread, 54, 0.0028))
-
-  const { cuffTop, cuffBottom } = g.points
-  for (const side of [-1, 1]) {
-    const curve = new THREE.CatmullRomCurve3(
-      Array.from({ length: 12 }, (_, i) => {
-        const t = i / 11
-        const x = side * THREE.MathUtils.lerp(cuffTop.x, cuffBottom.x, t) * 0.985
-        const y = THREE.MathUtils.lerp(cuffTop.y, cuffBottom.y, t) - 0.016
-        return new THREE.Vector3(x, y, g.frontZ(Math.abs(x) * side, y) + 0.002)
-      }),
-    )
-    group.add(stitchLine(curve, thread, 16, 0.0028))
-  }
+  group.add(collarMesh(g, p, ribMaterial(color.hex, true), 0.0095))
 
   // aree di stampa
   const chestW = Math.min(0.32, p.bodyWidth * 0.62)
   const chestH = chestW * 1.28
-  const chestY = p.length / 2 - p.neckDepth - 0.07 - chestH / 2
+  const chestY = g.points.neckBottom - 0.065 - chestH / 2
   const backY = chestY + 0.02
 
   const front = artworkMesh(garmentPrintSurface(g, chestY, chestW, chestH), {

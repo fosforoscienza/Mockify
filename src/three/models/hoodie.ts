@@ -14,6 +14,7 @@ import {
   type GarmentGeometry,
   type GarmentParams,
 } from './garment'
+import { colorHex } from './types'
 import type { BuildConfig, BuiltMockup, MockupDefinition, SlotDefinition } from './types'
 
 interface HoodieVariant {
@@ -94,9 +95,10 @@ function hoodieParams(v: HoodieVariant): GarmentParams {
     sleeveAngle: 0.62,
     sleeveOpen: 0.14,
     armpitDrop: 0.24,
-    depth: 0.14,
-    bulge: 0.095,
-    wrinkle: 0.011,
+    neckBack: 0.03,
+    edge: 0.008,
+    bulge: 0.115,
+    wrinkle: 0.009,
     hemCurve: 0.008,
     ...v.params,
   }
@@ -106,10 +108,10 @@ function hoodieParams(v: HoodieVariant): GarmentParams {
  * Cappuccio: stesso volume "a cuscino" del corpo, inclinato dietro le spalle,
  * con il bordo arrotolato dell'apertura in primo piano.
  */
-function hoodMesh(p: GarmentParams, material: THREE.Material, rib: THREE.Material) {
+function hoodMesh(p: GarmentParams, material: THREE.Material) {
   const group = new THREE.Group()
-  const halfW = p.neckWidth * 0.5 + 0.135
-  const height = 0.205
+  const halfW = p.neckWidth * 0.5 + 0.125
+  const height = 0.185
 
   const outline: THREE.Vector2[] = []
   const steps = 64
@@ -127,26 +129,44 @@ function hoodMesh(p: GarmentParams, material: THREE.Material, rib: THREE.Materia
     return 0.008 + 0.075 * Math.pow(Math.sin((d * Math.PI) / 2), 0.7)
   }
 
-  const hood = new THREE.Mesh(buildPillow(outline, zFn, 0.01), material)
+  const hood = new THREE.Mesh(buildPillow(outline, zFn, 0.012, (x, y) => {
+    const d = THREE.MathUtils.clamp(field.sample(x, y) / 0.1, 0, 1)
+    return 0.72 + 0.28 * d
+  }), material)
   hood.castShadow = true
   hood.receiveShadow = true
   group.add(hood)
 
-  // bordo arrotolato dell'apertura
-  const opening = new THREE.CatmullRomCurve3(
-    Array.from({ length: 26 }, (_, i) => {
-      const t = i / 25
-      const x = THREE.MathUtils.lerp(-halfW * 0.99, halfW * 0.99, t)
-      return new THREE.Vector3(x, -0.03 + 0.03 * Math.sin(t * Math.PI), 0.05 + 0.03 * Math.sin(t * Math.PI))
-    }),
-  )
-  const rim = new THREE.Mesh(new THREE.TubeGeometry(opening, 40, 0.021, 10, false), rib)
-  rim.castShadow = true
-  group.add(rim)
-
-  group.rotation.x = deg(-24)
-  group.position.set(0, p.length / 2 - p.neckDepth * 0.95, -0.045)
+  group.rotation.x = deg(-34)
+  group.position.set(0, p.length / 2 - p.neckDepth * 1.1, -0.09)
   return group
+}
+
+/**
+ * Bordo arrotolato del cappuccio: segue la scollatura del capo allargata, così
+ * poggia sulle spalle come l'apertura di un cappuccio vero.
+ */
+function hoodOpening(g: GarmentGeometry, material: THREE.Material) {
+  let top = -Infinity
+  g.neckHole.forEach((q) => (top = Math.max(top, q.y)))
+  const pts = g.neckHole.map((q) => {
+    const x = q.x * 1.16
+    const y = top + 0.006 - (top - q.y) * 1.18
+    return new THREE.Vector3(x, y, g.frontZ(x, y) + 0.004)
+  })
+  const curve = new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.5)
+  const geo = new THREE.TubeGeometry(curve, 110, 0.0155, 14, true)
+  const colors: number[] = []
+  const pos = geo.attributes.position as THREE.BufferAttribute
+  for (let i = 0; i < pos.count; i++) {
+    const a = g.ao(pos.getX(i), pos.getY(i))
+    colors.push(a, a, a)
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3))
+  const mesh = new THREE.Mesh(geo, material)
+  mesh.castShadow = true
+  mesh.receiveShadow = true
+  return mesh
 }
 
 function drawstrings(g: GarmentGeometry, p: GarmentParams, cord: THREE.Material, tip: THREE.Material) {
@@ -221,17 +241,18 @@ function ribBands(g: GarmentGeometry, p: GarmentParams, material: THREE.Material
 function build(cfg: BuildConfig): BuiltMockup {
   const variant = VARIANTS[cfg.variant] ?? VARIANTS.pullover
   const p = hoodieParams(variant)
-  const color = COLORS.find((c) => c.id === cfg.color) ?? COLORS[0]
+  const color = { hex: colorHex(cfg, COLORS) }
   const g = garmentGeometry(p)
   const group = new THREE.Group()
 
-  const cloth = fabricMaterial(color.hex, 'fleece')
-  const rib = ribMaterial(color.hex)
+  const cloth = fabricMaterial(color.hex, 'fleece', { vertexColors: true, doubleSide: true })
+  const rib = ribMaterial(color.hex, true)
   group.add(garmentMesh(g, p, cloth))
   ribBands(g, p, rib).forEach((m) => group.add(m))
 
   if (variant.hood) {
-    group.add(hoodMesh(p, cloth, rib))
+    group.add(hoodMesh(p, cloth))
+    group.add(hoodOpening(g, rib))
     group.add(drawstrings(g, p, plasticMaterial('#f6f3ec', 0.75), metalMaterial('#b9bec6')))
   } else {
     group.add(collarMesh(g, p, rib, 0.028))
@@ -268,10 +289,10 @@ function build(cfg: BuildConfig): BuiltMockup {
 
   const chestW = Math.min(0.33, p.bodyWidth * 0.58)
   const chestH = chestW * 1.05
-  const chestY = p.length / 2 - p.neckDepth - 0.085 - chestH / 2
+  const chestY = g.points.neckBottom - 0.07 - chestH / 2
   const backW = Math.min(0.34, p.bodyWidth * 0.6)
   const backH = backW * 1.25
-  const backY = p.length / 2 - p.neckDepth - 0.07 - backH / 2
+  const backY = g.points.neckBottom - 0.06 - backH / 2
 
   const front = artworkMesh(garmentPrintSurface(g, chestY, chestW, chestH), {
     slot: 'fronte',

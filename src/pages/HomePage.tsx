@@ -27,15 +27,15 @@ const STEPS = [
   },
   {
     title: 'Scarica',
-    text: 'Esporta l’inquadratura scelta in PNG con sfondo trasparente oppure in PDF, fino a 4096 px sul lato lungo.',
+    text: 'Esporta l’inquadratura scelta in PNG o PDF, con lo sfondo o senza, fino a 4096 px sul lato lungo.',
   },
 ]
 
 const FEATURES = [
   {
     icon: <LayersIcon size={20} />,
-    title: 'Sfondo sempre trasparente',
-    text: 'Il render non ha fondale: puoi appoggiare il mockup su qualsiasi grafica o presentazione.',
+    title: 'Sfondo a scelta',
+    text: 'Esporti con fondo trasparente oppure del colore che preferisci, scelto anche con il contagocce.',
   },
   {
     icon: <CursorIcon size={20} />,
@@ -58,6 +58,10 @@ const FAQ = [
   {
     q: 'Serve registrarsi?',
     a: 'No. Mockify funziona interamente nel browser: le immagini non vengono caricate da nessuna parte.',
+  },
+  {
+    q: 'Posso scegliere il colore del capo?',
+    a: 'Sì: ogni capo ha campioni rapidi, un selettore colore completo e il contagocce per prelevare una tinta dallo schermo. Pieghe e ombre si adattano da sole.',
   },
   {
     q: 'Che file posso usare?',
@@ -122,7 +126,8 @@ export default function HomePage() {
           <p className="lead">
             Carica un PNG o un JPG, Mockify lo adatta automaticamente al modello scelto — t-shirt,
             felpe, cappelli, poster, brochure, libri — lo fa seguire alle pieghe del tessuto e della
-            carta, e ti restituisce un render con sfondo trasparente pronto da usare.
+            carta, e ti restituisce un render pronto da usare — con lo sfondo trasparente o del
+            colore che scegli.
           </p>
           <div className="hero-actions">
             <Link to="/crea" className="btn btn-primary">

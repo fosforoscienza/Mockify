@@ -1,3 +1,4 @@
+import ColorField from './ColorField'
 import type { BuildConfig, MockupDefinition } from '../three/models'
 
 interface Props {
@@ -28,19 +29,12 @@ export default function Toolbar({ model, cfg, onVariant, onColor, onOption }: Pr
       {model.colors && model.colors.length > 0 && (
         <>
           <span className="toolbar-sep" />
-          <div className="swatches">
-            {model.colors.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                className={`swatch ${c.id === cfg.color ? 'active' : ''}`}
-                style={{ background: c.hex }}
-                onClick={() => onColor(c.id)}
-                title={c.label}
-                aria-label={`Colore ${c.label}`}
-              />
-            ))}
-          </div>
+          <ColorField
+            value={cfg.color}
+            presets={model.colors}
+            onChange={onColor}
+            title="Colore del materiale"
+          />
         </>
       )}
 

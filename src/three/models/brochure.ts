@@ -4,7 +4,9 @@ import { deg } from '../geometry'
 import { artworkMesh } from '../slot'
 import { buildSheetGeometry, type SurfaceFn } from '../surface'
 import { BROCHURE_FORMATS, findFormat, toScene } from './formats'
-import { optionString, type BuildConfig, type BuiltMockup, type MockupDefinition, type SlotDefinition } from './types'
+import {
+colorHex,
+optionString, type BuildConfig, type BuiltMockup, type MockupDefinition, type SlotDefinition } from './types'
 
 interface BrochureVariant {
   label: string
@@ -129,7 +131,7 @@ function build(cfg: BuildConfig): BuiltMockup {
   const format = findFormat(BROCHURE_FORMATS, optionString(cfg, 'formato', 'a4'))
   const { width: panelW, height } = toScene(format, 0.6)
   const spread = panelW * 3
-  const paperColor = PAPERS.find((p) => p.id === cfg.color) ?? PAPERS[0]
+  const paperColor = { hex: colorHex(cfg, PAPERS) }
 
   const group = new THREE.Group()
   const pts = foldedPath(variant.angles, panelW, variant.bow)

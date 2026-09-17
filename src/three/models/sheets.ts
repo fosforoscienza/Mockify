@@ -4,7 +4,9 @@ import { deg } from '../geometry'
 import { artworkMesh } from '../slot'
 import { buildSheetGeometry, type SurfaceFn } from '../surface'
 import { SHEET_FORMATS, findFormat, mm, toScene } from './formats'
-import { optionString, type BuildConfig, type BuiltMockup, type MockupDefinition, type SlotDefinition } from './types'
+import {
+colorHex,
+optionString, type BuildConfig, type BuiltMockup, type MockupDefinition, type SlotDefinition } from './types'
 
 interface SheetPose {
   x: number
@@ -23,6 +25,14 @@ const VARIANTS: Record<string, { label: string; description: string; poses: Shee
     poses: [
       { x: -0.3, z: 0.02, rot: deg(-7), lift: 0, flipped: false, curl: 0.35 },
       { x: 0.3, z: -0.01, rot: deg(6), lift: 0, flipped: true, curl: 0.3 },
+    ],
+  },
+  sovrapposti: {
+    label: 'Due fogli sovrapposti',
+    description: 'Un foglio appoggiato sull\u2019altro, con un angolo scoperto.',
+    poses: [
+      { x: -0.2, z: 0.05, rot: deg(-3), lift: 0, flipped: false, curl: 0.2 },
+      { x: 0.19, z: -0.03, rot: deg(5), lift: 0.0025, flipped: true, curl: 0.24 },
     ],
   },
   sparsi: {
@@ -69,7 +79,7 @@ function build(cfg: BuildConfig): BuiltMockup {
   const variant = VARIANTS[cfg.variant] ?? VARIANTS.coppia
   const format = findFormat(SHEET_FORMATS, optionString(cfg, 'formato', 'a4'))
   const { width: w, height: h } = toScene(format, 0.62)
-  const paperColor = PAPERS.find((p) => p.id === cfg.color) ?? PAPERS[0]
+  const paperColor = { hex: colorHex(cfg, PAPERS) }
   const group = new THREE.Group()
 
   const thickness = 0.0011

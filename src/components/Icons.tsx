@@ -207,6 +207,26 @@ export function CenterIcon({ size = 24 }: IconProps) {
   )
 }
 
+export function PipetteIcon({ size = 24 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="m15.6 5.2 3.2 3.2" />
+      <path d="M17.2 3.6a2.2 2.2 0 0 1 3.2 3.2l-1.7 1.7-3.2-3.2z" />
+      <path d="m14.7 6.1-8.6 8.6-1.5 5 5-1.5 8.6-8.6" />
+    </svg>
+  )
+}
+
+export function BackgroundIcon({ size = 24 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <rect x="3.6" y="3.6" width="16.8" height="16.8" rx="2" />
+      <path d="m4.4 15.4 4.2-4.2 3.4 3.4 3-3 4.6 4.6" />
+      <circle cx="9" cy="8.6" r="1.3" />
+    </svg>
+  )
+}
+
 export const MOCKUP_ICONS: Record<string, (p: IconProps) => JSX.Element> = {
   tshirt: TshirtIcon,
   hoodie: HoodieIcon,

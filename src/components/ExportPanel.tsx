@@ -4,8 +4,10 @@ import { DownloadIcon, WarningIcon } from './Icons'
 export type ExportFormat = 'png' | 'pdf'
 
 interface Props {
-  onExport(format: ExportFormat, longSide: number): Promise<void> | void
+  onExport(format: ExportFormat, longSide: number, withBackground: boolean): Promise<void> | void
   disabled: boolean
+  /** Colore di fondo attualmente in scena; null = nessuno. */
+  background: string | null
 }
 
 const SIZES = [
@@ -14,15 +16,17 @@ const SIZES = [
   { id: 4096, label: '4096 px' },
 ]
 
-export default function ExportPanel({ onExport, disabled }: Props) {
+export default function ExportPanel({ onExport, disabled, background }: Props) {
   const [format, setFormat] = useState<ExportFormat>('png')
   const [size, setSize] = useState(2048)
+  const [withBackground, setWithBackground] = useState(false)
   const [busy, setBusy] = useState(false)
+  const useBackground = withBackground && background !== null
 
   const run = async () => {
     setBusy(true)
     try {
-      await onExport(format, size)
+      await onExport(format, size, useBackground)
     } finally {
       setBusy(false)
     }
@@ -58,6 +62,33 @@ export default function ExportPanel({ onExport, disabled }: Props) {
 
       <div className="control">
         <div className="control-head">
+          <label>Sfondo del file</label>
+        </div>
+        <div className="seg">
+          <button
+            type="button"
+            className={!useBackground ? 'active' : ''}
+            onClick={() => setWithBackground(false)}
+          >
+            Trasparente
+          </button>
+          <button
+            type="button"
+            className={useBackground ? 'active' : ''}
+            onClick={() => setWithBackground(true)}
+            disabled={background === null}
+            title={background === null ? 'Scegli prima un colore di sfondo nella sezione Scena' : undefined}
+          >
+            Con sfondo
+          </button>
+        </div>
+        {background === null && (
+          <p className="hint">Per esportare con lo sfondo, scegline uno in “Scena”.</p>
+        )}
+      </div>
+
+      <div className="control">
+        <div className="control-head">
           <label>Risoluzione lato lungo</label>
         </div>
         <div className="seg">
@@ -87,8 +118,7 @@ export default function ExportPanel({ onExport, disabled }: Props) {
       </div>
 
       <p className="hint">
-        Viene esportata esattamente l’inquadratura che vedi, con lo sfondo trasparente. Il PDF
-        viene generato a 300 dpi.
+        Viene esportata esattamente l’inquadratura che vedi. Il PDF viene generato a 300 dpi.
       </p>
 
       <div className="callout" style={{ marginTop: 14, padding: '12px 14px', fontSize: 13 }}>

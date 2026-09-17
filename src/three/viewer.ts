@@ -313,6 +313,12 @@ export class MockupViewer {
 
   // ------------------------------------------------------------- rendering
 
+  /** Colore di fondo della scena; null = trasparente. */
+  setBackground(color: string | null) {
+    this.scene.background = color ? new THREE.Color(color) : null
+    this.needsRender = true
+  }
+
   setShadow(enabled: boolean) {
     this.shadowPlane.visible = enabled
     this.needsRender = true
@@ -335,11 +341,15 @@ export class MockupViewer {
   }
 
   /** Inquadratura corrente in PNG con fondo trasparente. */
-  snapshot(pixelWidth: number, pixelHeight: number): string {
+  snapshot(pixelWidth: number, pixelHeight: number, background?: string | null): string {
     const oldSize = new THREE.Vector2()
     this.renderer.getSize(oldSize)
     const oldPixelRatio = this.renderer.getPixelRatio()
     const oldAspect = this.camera.aspect
+    const oldBackground = this.scene.background
+    if (background !== undefined) {
+      this.scene.background = background ? new THREE.Color(background) : null
+    }
 
     this.renderer.setPixelRatio(1)
     this.renderer.setSize(pixelWidth, pixelHeight, false)
@@ -348,6 +358,7 @@ export class MockupViewer {
     this.renderer.render(this.scene, this.camera)
     const url = this.renderer.domElement.toDataURL('image/png')
 
+    this.scene.background = oldBackground
     this.renderer.setPixelRatio(oldPixelRatio)
     this.renderer.setSize(oldSize.x, oldSize.y, false)
     this.camera.aspect = oldAspect
