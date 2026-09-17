@@ -7,7 +7,7 @@ import {
   TSHIRT_PHOTO,
   type PhotoConfig,
 } from './bases'
-import { GARMENT_COLORS } from '../flat/model'
+import { GARMENT_COLORS } from './colori'
 import type { MockupDefinition } from '../three/models/types'
 
 /** Slot dell'editor ricavati dalle aree della variante scelta. */
@@ -31,8 +31,8 @@ const variantsOf = (photo: PhotoConfig) =>
   photo.variants.map((v) => ({ id: v.id, label: v.label, description: v.description }))
 
 export const tshirtPhoto: MockupDefinition = {
-  id: 'maglietta-foto',
-  name: 'T-shirt su foto',
+  id: 'maglietta',
+  name: 'T-shirt',
   category: 'abbigliamento',
   tagline: 'Quattro scatti reali, colore libero',
   description:
@@ -44,8 +44,8 @@ export const tshirtPhoto: MockupDefinition = {
 }
 
 export const felpaPhoto: MockupDefinition = {
-  id: 'felpa-foto',
-  name: 'Felpa su foto',
+  id: 'felpa',
+  name: 'Felpa',
   category: 'abbigliamento',
   tagline: 'Con cappuccio o girocollo',
   description:

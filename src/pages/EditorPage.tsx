@@ -3,8 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import MockupList from '../components/MockupList'
 import Toolbar from '../components/Toolbar'
 import Viewport, { type SlotInfo } from '../components/Viewport'
-import FlatViewport, { type MockupSurface } from '../components/FlatViewport'
-import PhotoViewport from '../components/PhotoViewport'
+import PhotoViewport, { type MockupSurface } from '../components/PhotoViewport'
 import { photoSlots } from '../photo/model'
 import type { ArtTransform } from '../three/artwork'
 import ArtworkPanel from '../components/ArtworkPanel'
@@ -35,7 +34,6 @@ export default function EditorPage() {
   const [ready, setReady] = useState(false)
 
   const model = getMockup(state.activeModel) ?? MOCKUPS[0]
-  const flat = model.flat
   const photo = model.photo
   const ms = modelState(state)
   const cfg = ms.cfg
@@ -64,15 +62,6 @@ export default function EditorPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.activeModel])
 
-  const view: 'front' | 'back' | 'both' =
-    cfg.variant === 'back' ? 'back' : cfg.variant === 'both' ? 'both' : 'front'
-
-  // i capi in piano dichiarano i propri slot: uno per vista
-  useEffect(() => {
-    if (!flat) return
-    setSlots(flat.slots.map((s) => ({ id: s.id, label: s.label, hint: s.hint })))
-  }, [flat])
-
   // sui mockup su foto gli slot vengono dalle aree della variante scelta
   const photoSlotList = useMemo(
     () => (photo ? photoSlots(photo, cfg.variant) : []),
@@ -89,31 +78,12 @@ export default function EditorPage() {
     [photoSlotList, state.activeSlot],
   )
 
-  // vista e area di stampa restano allineate: cambiando l'una cambia l'altra
-  useEffect(() => {
-    if (!flat || !state.activeSlot || view === 'both') return
-    const slot = flat.slots.find((s) => s.id === state.activeSlot)
-    if (slot && slot.view !== view) {
-      dispatch({ type: 'set-variant', variant: slot.view })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.activeSlot, flat])
-
-  useEffect(() => {
-    if (!flat || view === 'both') return
-    const slot = flat.slots.find((s) => s.view === view)
-    if (slot && slot.id !== state.activeSlot) {
-      dispatch({ type: 'set-active-slot', slot: slot.id })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, flat])
-
   // ricostruzione del mockup 3D a ogni cambio di modello, variante, colore o opzione
   useEffect(() => {
-    if (!ready || !viewerRef.current || flat || photo) return
+    if (!ready || !viewerRef.current || photo) return
     viewerRef.current.setMockup(model, cfg, false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, model.id, cfgKey, flat, photo])
+  }, [ready, model.id, cfgKey, photo])
 
   // la prima area di stampa diventa attiva quando il modello cambia
   useEffect(() => {
@@ -176,18 +146,6 @@ export default function EditorPage() {
   const activeSlot = state.activeSlot
   const current = activeSlot ? slotState(state, activeSlot) : null
   const currentImage = current?.imageId ? state.images[current.imageId] ?? null : null
-  // nella vista affiancata servono entrambe le facciate insieme
-  const flatArtworks = useMemo(() => {
-    const pick = (slotView: 'front' | 'back') => {
-      const slot = flat?.slots.find((s) => s.view === slotView)
-      if (!slot) return null
-      const st = slotState(state, slot.id)
-      const image = st.imageId ? state.images[st.imageId] : null
-      return image ? { image: image.element, transform: st.transform } : null
-    }
-    return { front: pick('front'), back: pick('back') }
-  }, [flat, state])
-
   const photoArtworks = useMemo(() => {
     const out: Record<string, { image: HTMLImageElement; transform: ArtTransform } | null> = {}
     for (const slot of photoSlotList) {
@@ -266,24 +224,6 @@ export default function EditorPage() {
             background={background}
             artworks={photoArtworks}
             slotId={state.activeSlot}
-            onReady={(surface) => {
-              surfaceRef.current = surface
-              setReady(true)
-            }}
-            onDragTransform={(slot, offsetX, offsetY) =>
-              dispatch({ type: 'patch-transform', slot, patch: { offsetX, offsetY } })
-            }
-            onDropImage={(file) => void handleFile(file)}
-          />
-        ) : flat ? (
-          <FlatViewport
-            flat={flat}
-            view={view}
-            color={cfg.color}
-            background={background}
-            shadow={shadow}
-            slotId={view === 'both' ? null : state.activeSlot}
-            artworks={flatArtworks}
             onReady={(surface) => {
               surfaceRef.current = surface
               setReady(true)

@@ -217,7 +217,7 @@ export const TELEFONO_PHOTO: PhotoConfig = {
       views: [
         {
           file: '01/fronte-retro.webp',
-          areas: [schermo([[0.475, 0.193], [0.678, 0.189], [0.683, 0.848], [0.481, 0.856]])],
+          areas: [schermo([[0.472, 0.197], [0.682, 0.191], [0.689, 0.844], [0.476, 0.853]])],
         },
       ],
     },
@@ -227,7 +227,7 @@ export const TELEFONO_PHOTO: PhotoConfig = {
       views: [
         {
           file: '01/inclinato-fronte-retro.webp',
-          areas: [schermo([[0.431, 0.285], [0.6, 0.263], [0.744, 0.77], [0.575, 0.793]])],
+          areas: [schermo([[0.426, 0.294], [0.587, 0.249], [0.755, 0.759], [0.593, 0.813]])],
         },
       ],
     },
@@ -238,7 +238,7 @@ export const TELEFONO_PHOTO: PhotoConfig = {
       views: [
         {
           file: '01/inclinato.webp',
-          areas: [schermo([[0.269, 0.281], [0.467, 0.219], [0.714, 0.737], [0.517, 0.819]])],
+          areas: [schermo([[0.258, 0.306], [0.437, 0.189], [0.726, 0.717], [0.547, 0.848]])],
         },
       ],
     },
@@ -260,7 +260,7 @@ export const MANIFESTO_PHOTO: PhotoConfig = {
             {
               id: 'fronte',
               label: 'Manifesto',
-              quad: rect(0.168, 0.356, 0.833, 0.722),
+              quad: [[0.163, 0.358], [0.834, 0.356], [0.834, 0.727], [0.163, 0.727]],
               hint: '6 × 3 m',
               fill: 'cover',
             },
@@ -279,7 +279,7 @@ export const MANIFESTO_PHOTO: PhotoConfig = {
             {
               id: 'fronte',
               label: 'Manifesto',
-              quad: [[0.205, 0.295], [0.79, 0.382], [0.781, 0.703], [0.199, 0.731]],
+              quad: [[0.212, 0.304], [0.8, 0.409], [0.782, 0.73], [0.198, 0.737]],
               hint: '6 × 3 m',
               fill: 'cover',
             },
@@ -298,14 +298,14 @@ export const MANIFESTO_PHOTO: PhotoConfig = {
             {
               id: 'fronte',
               label: 'Poster di sinistra',
-              quad: [[0.214, 0.263], [0.372, 0.263], [0.375, 0.617], [0.214, 0.617]],
+              quad: [[0.213, 0.26], [0.375, 0.259], [0.377, 0.62], [0.212, 0.619]],
               hint: '70 × 100 cm',
               fill: 'cover',
             },
             {
               id: 'retro',
               label: 'Poster di destra',
-              quad: [[0.65, 0.263], [0.811, 0.258], [0.811, 0.617], [0.647, 0.613]],
+              quad: [[0.648, 0.26], [0.813, 0.259], [0.813, 0.619], [0.647, 0.616]],
               hint: '70 × 100 cm',
               fill: 'cover',
             },

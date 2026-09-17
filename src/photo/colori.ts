@@ -1,12 +1,3 @@
-import { HOODIE_SPEC, TSHIRT_SPEC, type GarmentSpec } from './garments'
-import type { MockupDefinition } from '../three/models/types'
-
-/** Capi disegnati in piano: due sole viste, fronte e retro. */
-export interface FlatConfig {
-  spec: GarmentSpec
-  slots: { id: string; label: string; hint?: string; view: 'front' | 'back' }[]
-}
-
 /**
  * Cartella colori B&C E150, trascritta dal campionario fornito: i valori sono
  * letti dai campioni, non estratti da un file colore del produttore, quindi
@@ -57,47 +48,3 @@ export const GARMENT_COLORS = [
   { id: 'e150-39', label: 'Nero', hex: '#060606', dark: true },
   { id: 'e150-40', label: 'Marrone scuro', hex: '#3b2f2a', dark: true },
 ]
-
-const VIEWS = [
-  { id: 'front', label: 'Fronte' },
-  { id: 'back', label: 'Retro' },
-  { id: 'both', label: 'Fronte + retro' },
-]
-
-export const tshirtFlat: MockupDefinition = {
-  id: 'maglietta',
-  name: 'T-shirt',
-  category: 'abbigliamento',
-  tagline: 'Fronte e retro, colore libero',
-  description:
-    'Maglietta distesa, resa a piena risoluzione: trama del tessuto, pieghe e cuciture sono disegnate pixel per pixel e la stampa segue le pieghe. Colore del capo completamente libero.',
-  icon: 'tshirt',
-  variants: VIEWS,
-  colors: GARMENT_COLORS,
-  flat: {
-    spec: TSHIRT_SPEC,
-    slots: [
-      { id: 'fronte', label: 'Fronte', view: 'front', hint: 'Area petto ~30 × 38 cm' },
-      { id: 'retro', label: 'Retro', view: 'back', hint: 'Area schiena ~30 × 38 cm' },
-    ],
-  },
-}
-
-export const hoodieFlat: MockupDefinition = {
-  id: 'felpa',
-  name: 'Felpa con cappuccio',
-  category: 'abbigliamento',
-  tagline: 'Fronte e retro, colore libero',
-  description:
-    'Felpa con cappuccio distesa, con tasca a marsupio, costine e lacci. Stessa resa a piena risoluzione della t-shirt.',
-  icon: 'hoodie',
-  variants: VIEWS,
-  colors: GARMENT_COLORS,
-  flat: {
-    spec: HOODIE_SPEC,
-    slots: [
-      { id: 'fronte', label: 'Fronte', view: 'front', hint: 'Sopra la tasca, ~30 × 32 cm' },
-      { id: 'retro', label: 'Retro', view: 'back', hint: 'Area schiena ~30 × 32 cm' },
-    ],
-  },
-}

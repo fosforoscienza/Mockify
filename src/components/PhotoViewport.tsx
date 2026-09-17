@@ -4,7 +4,11 @@ import { photoVariant } from '../photo/model'
 import type { PhotoConfig } from '../photo/bases'
 import type { ArtTransform } from '../three/artwork'
 import { imageFromDataTransfer } from '../lib/image'
-import type { MockupSurface } from './FlatViewport'
+/** Contratto comune fra le superfici di lavoro e l'export dell'editor. */
+export interface MockupSurface {
+  snapshot(pxW: number, pxH: number, background: string | null): string
+  aspect(): number
+}
 
 export interface PhotoArt {
   image: HTMLImageElement
