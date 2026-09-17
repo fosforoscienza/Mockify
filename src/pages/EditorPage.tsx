@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import MockupList from '../components/MockupList'
 import Toolbar from '../components/Toolbar'
 import Viewport, { type SlotInfo } from '../components/Viewport'
+import FlatViewport, { type MockupSurface } from '../components/FlatViewport'
 import ArtworkPanel from '../components/ArtworkPanel'
 import ExportPanel, { type ExportFormat } from '../components/ExportPanel'
 import ScenePanel from '../components/ScenePanel'
@@ -26,9 +27,11 @@ export default function EditorPage() {
   const [background, setBackground] = useState<string | null>(null)
   const [shadow, setShadow] = useState(true)
   const viewerRef = useRef<MockupViewer | null>(null)
+  const surfaceRef = useRef<MockupSurface | null>(null)
   const [ready, setReady] = useState(false)
 
   const model = getMockup(state.activeModel) ?? MOCKUPS[0]
+  const flat = model.flat
   const ms = modelState(state)
   const cfg = ms.cfg
   const cfgKey = useMemo(() => JSON.stringify(cfg), [cfg])
@@ -56,12 +59,39 @@ export default function EditorPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.activeModel])
 
-  // ricostruzione del mockup a ogni cambio di modello, variante, colore o opzione
+  const view: 'front' | 'back' = cfg.variant === 'back' ? 'back' : 'front'
+
+  // i capi in piano dichiarano i propri slot: uno per vista
   useEffect(() => {
-    if (!ready || !viewerRef.current) return
+    if (!flat) return
+    setSlots(flat.slots.map((s) => ({ id: s.id, label: s.label, hint: s.hint })))
+  }, [flat])
+
+  // vista e area di stampa restano allineate: cambiando l'una cambia l'altra
+  useEffect(() => {
+    if (!flat || !state.activeSlot) return
+    const slot = flat.slots.find((s) => s.id === state.activeSlot)
+    if (slot && slot.view !== view) {
+      dispatch({ type: 'set-variant', variant: slot.view })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.activeSlot, flat])
+
+  useEffect(() => {
+    if (!flat) return
+    const slot = flat.slots.find((s) => s.view === view)
+    if (slot && slot.id !== state.activeSlot) {
+      dispatch({ type: 'set-active-slot', slot: slot.id })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, flat])
+
+  // ricostruzione del mockup 3D a ogni cambio di modello, variante, colore o opzione
+  useEffect(() => {
+    if (!ready || !viewerRef.current || flat) return
     viewerRef.current.setMockup(model, cfg, false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, model.id, cfgKey])
+  }, [ready, model.id, cfgKey, flat])
 
   // la prima area di stampa diventa attiva quando il modello cambia
   useEffect(() => {
@@ -142,13 +172,15 @@ export default function EditorPage() {
 
   const handleExport = useCallback(
     async (format: ExportFormat, longSide: number, withBackground: boolean) => {
-      const viewer = viewerRef.current
-      if (!viewer) return
-      const canvas = viewer.renderer.domElement
-      const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight)
+      const surface = surfaceRef.current
+      if (!surface) return
+      // i capi in piano ridisegnano tutto alla risoluzione richiesta: lasciamo
+      // che il pulsante mostri lo stato di attesa prima di bloccare il thread
+      await new Promise((resolve) => window.setTimeout(resolve, 40))
+      const aspect = surface.aspect()
       const pxW = aspect >= 1 ? longSide : Math.round(longSide * aspect)
       const pxH = aspect >= 1 ? Math.round(longSide / aspect) : longSide
-      const url = viewer.snapshot(pxW, pxH, withBackground ? background : null)
+      const url = surface.snapshot(pxW, pxH, withBackground ? background : null)
       const name = safeFilename(['mockify', model.name, cfg.variant])
       if (format === 'png') {
         downloadDataUrl(url, `${name}.png`)
@@ -175,22 +207,53 @@ export default function EditorPage() {
           onColor={(color) => dispatch({ type: 'set-color', color })}
           onOption={(option, value) => dispatch({ type: 'set-option', option, value })}
         />
-        <Viewport
-          model={model}
-          cfg={cfg}
-          hasArtwork={Boolean(currentImage)}
-          onReady={(viewer) => {
-            viewerRef.current = viewer
-            setReady(true)
-          }}
-          onSlots={setSlots}
-          onDragTransform={(slot, offsetX, offsetY) =>
-            dispatch({ type: 'patch-transform', slot, patch: { offsetX, offsetY } })
-          }
-          onDropImage={(file) => void handleFile(file)}
-          background={background}
-          shadow={shadow}
-        />
+        {flat ? (
+          <FlatViewport
+            flat={flat}
+            view={view}
+            color={cfg.color}
+            background={background}
+            shadow={shadow}
+            slotId={state.activeSlot}
+            artwork={
+              currentImage && current
+                ? { image: currentImage.element, transform: current.transform }
+                : null
+            }
+            onReady={(surface) => {
+              surfaceRef.current = surface
+              setReady(true)
+            }}
+            onDragTransform={(slot, offsetX, offsetY) =>
+              dispatch({ type: 'patch-transform', slot, patch: { offsetX, offsetY } })
+            }
+            onDropImage={(file) => void handleFile(file)}
+          />
+        ) : (
+          <Viewport
+            model={model}
+            cfg={cfg}
+            hasArtwork={Boolean(currentImage)}
+            onReady={(viewer) => {
+              viewerRef.current = viewer
+              surfaceRef.current = {
+                snapshot: (w, h, bg) => viewer.snapshot(w, h, bg),
+                aspect: () => {
+                  const el = viewer.renderer.domElement
+                  return el.clientWidth / Math.max(1, el.clientHeight)
+                },
+              }
+              setReady(true)
+            }}
+            onSlots={setSlots}
+            onDragTransform={(slot, offsetX, offsetY) =>
+              dispatch({ type: 'patch-transform', slot, patch: { offsetX, offsetY } })
+            }
+            onDropImage={(file) => void handleFile(file)}
+            background={background}
+            shadow={shadow}
+          />
+        )}
       </section>
 
       <aside className="panel">

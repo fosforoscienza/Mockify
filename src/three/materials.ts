@@ -38,24 +38,6 @@ export function fabricMaterial(
   )
 }
 
-export function ribMaterial(hex: string, vertexColors = false) {
-  const c = new THREE.Color(hex)
-  c.offsetHSL(0, 0, -0.045)
-  return track(
-    new THREE.MeshPhysicalMaterial({
-      color: c,
-      roughness: 0.97,
-      metalness: 0,
-      sheen: 0.7,
-      sheenColor: c.clone().lerp(new THREE.Color('#ffffff'), 0.45),
-      sheenRoughness: 0.7,
-      normalMap: knitNormalMap(30),
-      normalScale: new THREE.Vector2(0.8, 0.8),
-      vertexColors,
-    }),
-  )
-}
-
 export function paperMaterial(hex = '#ffffff', gloss = 0.25) {
   return track(
     new THREE.MeshStandardMaterial({

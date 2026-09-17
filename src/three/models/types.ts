@@ -69,7 +69,10 @@ export interface MockupDefinition {
   variants: { id: string; label: string; description?: string }[]
   colors?: MaterialColor[]
   options?: MockupOption[]
-  build(cfg: BuildConfig): BuiltMockup
+  /** Modelli 3D: costruisce la scena. */
+  build?(cfg: BuildConfig): BuiltMockup
+  /** Capi disegnati in piano: niente scena 3D, solo fronte e retro. */
+  flat?: import('../../flat/model').FlatConfig
 }
 
 /**

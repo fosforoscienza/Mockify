@@ -1,13 +1,20 @@
 import { book } from './book'
 import { brochure } from './brochure'
 import { cap } from './cap'
-import { hoodie } from './hoodie'
 import { poster } from './poster'
 import { sheets } from './sheets'
-import { tshirt } from './tshirt'
+import { hoodieFlat, tshirtFlat } from '../../flat/model'
 import type { BuildConfig, MockupDefinition } from './types'
 
-export const MOCKUPS: MockupDefinition[] = [tshirt, hoodie, cap, sheets, poster, brochure, book]
+export const MOCKUPS: MockupDefinition[] = [
+  tshirtFlat,
+  hoodieFlat,
+  cap,
+  sheets,
+  poster,
+  brochure,
+  book,
+]
 
 export const CATEGORIES: { id: MockupDefinition['category']; label: string }[] = [
   { id: 'abbigliamento', label: 'Abbigliamento' },

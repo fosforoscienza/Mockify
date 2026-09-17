@@ -14,11 +14,11 @@ Nessun server, nessuna registrazione: le immagini non lasciano il computer.
 
 | Mockup | Varianti | Aree di stampa | Opzioni |
 | --- | --- | --- | --- |
-| **T-shirt** | classica, oversize, slim, scollo a V, manica lunga | fronte, retro | colore libero + 7 campioni |
-| **Felpa** | cappuccio, full zip, oversize, girocollo | fronte, retro | colore libero + 7 campioni |
+| **T-shirt** | fronte, retro (resa in piano) | fronte, retro | colore libero + 7 campioni |
+| **Felpa con cappuccio** | fronte, retro (resa in piano) | fronte, retro | colore libero + 7 campioni |
 | **Cappello con visiera** | baseball, snapback, dad hat, trucker | fronte, retro | colore libero + 6 campioni |
 | **Fogli sparsi** | due affiancati, due sovrapposti, tre sparsi, pila | fronte, retro (due facciate diverse) | A4, A5, Letter, quadrato, A4 orizzontale |
-| **Poster appeso** | cornice a bastone, mollette, puntine, foglio libero | grafica intera | A3, A2, A1, 50×70, 70×50, 60×60 |
+| **Poster appeso** | cornice a bastone, mollette, puntine, foglio libero | grafica intera | A3, A2, A1, 50×70, 70×50, 60×60, 6×3 m |
 | **Brochure 3 ante** | piega a zeta, a rotolo, aperta, in piedi | spread interno, spread esterno | A4, DL, A5, quadrata |
 | **Libro copertina rigida** | in piedi, tre quarti, disteso, aperto | copertina, dorso, quarta (oppure le due pagine interne) | 6 formati, dorso 8–60 mm, profilo tondo/quadro, finitura tela/patinata |
 
@@ -79,7 +79,9 @@ src/
     textures.ts     tessuto, maglia, carta, tela, taglio pagine (canvas 2D)
     materials.ts    materiali condivisi
     viewer.ts       scena, luci, ombra, controlli, trascinamento, esportazione
-    models/         un file per mockup + la base comune dei capi
+    models/         un file per mockup 3D (cappello, fogli, poster, brochure, libro)
+  flat/             capi disegnati in piano: sagome, campo di forma, rumore e
+                    renderer 2D con integrazione della stampa
   components/       barra, elenco mockup, viewport, pannelli, icone SVG
   pages/            home ed editor
   state/            reducer del progetto (modello, opzioni, grafiche)
@@ -91,13 +93,16 @@ Due idee reggono tutto il progetto:
 - **Superfici parametriche condivise.** Il supporto e la grafica nascono dalla
   stessa funzione `(u, v) → punto`, quindi la stampa segue esattamente la
   curvatura di poster, brochure, dorso del libro o calotta del cappello.
-- **Volume dei capi da sezione ellittica.** Per magliette e felpe si stima in
-  ogni punto la semi-larghezza locale del tessuto (massimo scorrevole sul campo
-  di distanza) e si costruisce una sezione ellittica: il corpo risulta pieno e
-  le maniche restano tubi sottili. L'apertura del collo è un foro vero, con
-  l'interno della schiena visibile, e pieghe orientate e occlusione ambientale
-  vivono nei vertici: il colore si sceglie liberamente perché ombre e pieghe lo
-  moltiplicano invece di essere dipinte sopra.
+- **Capi resi in piano, non in 3D.** T-shirt e felpe non sono modelli
+  poligonali: `src/flat/` costruisce una mappa di rilievo del capo disteso —
+  forma d'insieme, pieghe orientate, grinze, collo, cuciture, orli — e la
+  illumina per pixel alla risoluzione richiesta. A quella scala si vede la
+  maglia del tessuto, cosa che un modello 3D con normal map non riesce a dare;
+  in cambio si rinuncia alla rotazione libera e restano due viste, fronte e
+  retro. La grafica caricata viene spostata dal gradiente delle pieghe e
+  moltiplicata per la stessa luce del capo, così segue la stoffa. Il colore è
+  libero perché ombre e pieghe moltiplicano la tinta invece di essere dipinte
+  sopra.
 
 Il canvas ha il canale alpha (`alpha: true`, clear alpha 0) e l'ombra a terra usa
 uno `ShadowMaterial`: senza sfondo il render resta trasparente fino

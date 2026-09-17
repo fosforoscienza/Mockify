@@ -239,8 +239,7 @@ export default function ArtworkPanel({
         </fieldset>
 
         <p className="hint">
-          Puoi anche trascinare direttamente la grafica sul mockup: il resto della superficie
-          continua a far ruotare la scena.
+          Puoi anche trascinare la grafica direttamente sul mockup per posizionarla.
         </p>
       </div>
     </>

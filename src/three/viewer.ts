@@ -81,7 +81,7 @@ export class MockupViewer {
 
     this.shadowPlane = new THREE.Mesh(
       new THREE.PlaneGeometry(6, 6),
-      new THREE.ShadowMaterial({ opacity: 0.12, transparent: true }),
+      new THREE.ShadowMaterial({ opacity: 0.2, transparent: true }),
     )
     this.shadowPlane.rotation.x = -Math.PI / 2
     this.shadowPlane.receiveShadow = true
@@ -110,6 +110,7 @@ export class MockupViewer {
   // ---------------------------------------------------------------- modello
 
   setMockup(model: MockupDefinition, cfg: BuildConfig, keep = true) {
+    if (!model.build) return
     const previous = new Map(this.slots)
     this.clearRoot()
 
@@ -334,6 +335,7 @@ export class MockupViewer {
   }
 
   resetView(model: MockupDefinition, cfg: BuildConfig) {
+    if (!model.build) return
     const built = model.build(cfg)
     this.fitCamera(built.camera)
     disposeObject(built.group)

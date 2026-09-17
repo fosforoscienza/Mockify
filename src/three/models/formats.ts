@@ -13,6 +13,7 @@ export const POSTER_FORMATS: PrintFormat[] = [
   { id: '50x70', label: '50 × 70 cm', w: 500, h: 700 },
   { id: '70x50', label: '70 × 50 cm (orizzontale)', w: 700, h: 500 },
   { id: '60x60', label: '60 × 60 cm (quadrato)', w: 600, h: 600 },
+  { id: '6x3', label: '6 × 3 m — manifesto da affissione', w: 6000, h: 3000 },
 ]
 
 export const SHEET_FORMATS: PrintFormat[] = [

@@ -1266,3 +1266,7 @@ input[type='range']::-moz-range-thumb {
   font-size: 13px;
   color: var(--muted);
 }
+
+.viewport.flat canvas {
+  cursor: default;
+}

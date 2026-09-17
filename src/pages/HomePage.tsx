@@ -23,7 +23,7 @@ const STEPS = [
   },
   {
     title: 'Adatta e ruota',
-    text: 'Sposta la grafica trascinandola sul mockup, regola dimensione e rotazione, poi ruota la scena 3D con il mouse.',
+    text: 'Sposta la grafica trascinandola sul mockup e regola dimensione e rotazione. Sui mockup 3D ruoti anche la scena con il mouse.',
   },
   {
     title: 'Scarica',
@@ -39,8 +39,8 @@ const FEATURES = [
   },
   {
     icon: <CursorIcon size={20} />,
-    title: 'Rotazione libera',
-    text: 'Trascina con il mouse per girare il modello e scarica esattamente l’angolazione che vedi.',
+    title: 'Capi disegnati in piano',
+    text: 'T-shirt e felpe rese a piena risoluzione, fronte e retro: tessuto, pieghe e cuciture vere. Gli altri mockup si ruotano in 3D.',
   },
   {
     icon: <UploadIcon size={20} />,
@@ -127,7 +127,7 @@ export default function HomePage() {
             Carica un PNG o un JPG, Mockify lo adatta automaticamente al modello scelto — t-shirt,
             felpe, cappelli, poster, brochure, libri — lo fa seguire alle pieghe del tessuto e della
             carta, e ti restituisce un render pronto da usare — con lo sfondo trasparente o del
-            colore che scegli.
+            colore che scegli. I capi d’abbigliamento sono disegnati in piano, fronte e retro.
           </p>
           <div className="hero-actions">
             <Link to="/crea" className="btn btn-primary">
