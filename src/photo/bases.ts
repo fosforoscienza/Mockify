@@ -4,10 +4,16 @@
  * Ogni variante è una foto (o una coppia fronte/retro della stessa foto), e la
  * sua etichetta viene dal nome del file: è così che chi sceglie capisce cosa
  * sta selezionando — "T-shirt appesa", "Maglietta piegata", "Cappello di tre
- * quarti". Le aree di stampa sono quadrilateri in coordinate normalizzate
- * sull'immagine, nell'ordine alto-sinistra, alto-destra, basso-destra,
- * basso-sinistra: quattro punti e non un rettangolo, perché sulle foto in
- * prospettiva la stampa deve seguire l'inclinazione del soggetto.
+ * quarti".
+ *
+ * Le aree di stampa sono quadrilateri in coordinate normalizzate sull'immagine,
+ * nell'ordine alto-sinistra, alto-destra, basso-destra, basso-sinistra: quattro
+ * punti e non un rettangolo, perché sulle foto in prospettiva la stampa deve
+ * seguire l'inclinazione del soggetto.
+ *
+ * Dove la foto ha l'area dipinta di verde quei punti non si scrivono: li trova
+ * il renderer dal verde stesso, con la precisione che a occhio non si ottiene.
+ * Basta dichiarare `green: true` e la proporzione reale della stampa.
  */
 
 export type Quad = [number, number][]
@@ -15,7 +21,24 @@ export type Quad = [number, number][]
 export interface PhotoArea {
   id: string
   label: string
-  quad: Quad
+  /**
+   * Spigoli dell'area, quando vanno indicati a mano. Sulle basi con green
+   * screen non serve: li ricava il renderer dal verde stesso.
+   */
+  quad?: Quad
+  /**
+   * L'area è dipinta di verde nella foto. Il renderer la ritrova da sola,
+   * spigoli compresi, e sostituisce il verde con carta bianca che conserva
+   * la luce della scena. Con più aree verdi nella stessa foto contano da
+   * sinistra a destra, nell'ordine in cui sono dichiarate qui.
+   */
+  green?: boolean
+  /**
+   * Proporzione reale della stampa, larghezza / altezza. Serve solo alle aree
+   * verdi: una macchia verde non dice da che parte sta il suo alto, e senza
+   * questo numero la grafica può uscire ruotata di 90°.
+   */
+  ratio?: number
   hint?: string
   /**
    * Quanto la luce della foto agisce sulla stampa: 1 = pieghe e ombre del
@@ -197,10 +220,12 @@ export const CAPPELLO_PESCATORE_PHOTO: PhotoConfig = {
   ],
 }
 
-const schermo = (quad: Quad): PhotoArea => ({
+/** Lo schermo è dipinto di verde: spigoli e angoli arrotondati li trova il renderer. */
+const schermo = (): PhotoArea => ({
   id: 'schermo',
   label: 'Schermo',
-  quad,
+  green: true,
+  ratio: 1179 / 2556,
   hint: 'Display',
   shade: 0.2,
   fill: 'cover',
@@ -217,7 +242,7 @@ export const TELEFONO_PHOTO: PhotoConfig = {
       views: [
         {
           file: '01/fronte-retro.webp',
-          areas: [schermo([[0.472, 0.197], [0.682, 0.191], [0.689, 0.844], [0.476, 0.853]])],
+          areas: [schermo()],
         },
       ],
     },
@@ -227,7 +252,7 @@ export const TELEFONO_PHOTO: PhotoConfig = {
       views: [
         {
           file: '01/inclinato-fronte-retro.webp',
-          areas: [schermo([[0.426, 0.294], [0.587, 0.249], [0.755, 0.759], [0.593, 0.813]])],
+          areas: [schermo()],
         },
       ],
     },
@@ -238,7 +263,7 @@ export const TELEFONO_PHOTO: PhotoConfig = {
       views: [
         {
           file: '01/inclinato.webp',
-          areas: [schermo([[0.258, 0.306], [0.437, 0.189], [0.726, 0.717], [0.547, 0.848]])],
+          areas: [schermo()],
         },
       ],
     },
@@ -257,13 +282,7 @@ export const MANIFESTO_PHOTO: PhotoConfig = {
         {
           file: '600x300-01/fronte.webp',
           areas: [
-            {
-              id: 'fronte',
-              label: 'Manifesto',
-              quad: [[0.163, 0.358], [0.834, 0.356], [0.834, 0.727], [0.163, 0.727]],
-              hint: '6 × 3 m',
-              fill: 'cover',
-            },
+            { id: 'fronte', label: 'Manifesto', green: true, ratio: 2, hint: '6 × 3 m', fill: 'cover' },
           ],
         },
       ],
@@ -276,13 +295,7 @@ export const MANIFESTO_PHOTO: PhotoConfig = {
         {
           file: '600x300-01/tre-quarti.webp',
           areas: [
-            {
-              id: 'fronte',
-              label: 'Manifesto',
-              quad: [[0.212, 0.304], [0.809, 0.409], [0.818, 0.731], [0.198, 0.737]],
-              hint: '6 × 3 m',
-              fill: 'cover',
-            },
+            { id: 'fronte', label: 'Manifesto', green: true, ratio: 2, hint: '6 × 3 m', fill: 'cover' },
           ],
         },
       ],
@@ -295,20 +308,8 @@ export const MANIFESTO_PHOTO: PhotoConfig = {
         {
           file: '70x100-01/fronte.webp',
           areas: [
-            {
-              id: 'fronte',
-              label: 'Poster di sinistra',
-              quad: [[0.213, 0.26], [0.375, 0.259], [0.377, 0.62], [0.212, 0.619]],
-              hint: '70 × 100 cm',
-              fill: 'cover',
-            },
-            {
-              id: 'retro',
-              label: 'Poster di destra',
-              quad: [[0.648, 0.26], [0.813, 0.259], [0.813, 0.619], [0.647, 0.616]],
-              hint: '70 × 100 cm',
-              fill: 'cover',
-            },
+            { id: 'fronte', label: 'Poster di sinistra', green: true, ratio: 0.7, hint: '70 × 100 cm', fill: 'cover' },
+            { id: 'retro', label: 'Poster di destra', green: true, ratio: 0.7, hint: '70 × 100 cm', fill: 'cover' },
           ],
         },
       ],

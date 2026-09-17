@@ -40,6 +40,94 @@ function squareToQuad(q: Quad, w: number, h: number) {
   return [x1 - x0 + g * x1, x3 - x0 + hh * x3, x0, y1 - y0 + g * y1, y3 - y0 + hh * y3, y0, g, hh, 1]
 }
 
+/** Verde chroma key: molto più verde che rosso e blu, a qualunque luminosità. */
+function isGreen(r: number, g: number, b: number) {
+  return g > 70 && g > r * 1.6 && g > b * 1.6
+}
+
+const crossZ = (o: number[], a: number[], b: number[]) =>
+  (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+/** Guscio convesso, monotone chain. */
+function convexHull(pts: number[][]) {
+  pts.sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  const lower: number[][] = []
+  const upper: number[][] = []
+  for (const p of pts) {
+    while (lower.length >= 2 && crossZ(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop()
+    lower.push(p)
+  }
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const p = pts[i]
+    while (upper.length >= 2 && crossZ(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop()
+    upper.push(p)
+  }
+  return lower.slice(0, -1).concat(upper.slice(0, -1))
+}
+
+/**
+ * Spigoli di una regione. Il guscio viene ruotato sull'orientamento del
+ * rettangolo di area minima: nel riferimento raddrizzato gli spigoli sono gli
+ * estremi di x+y e x-y, cosa che su un soggetto inclinato non vale.
+ * L'ordine finale è scelto confrontando le proporzioni misurate con quelle
+ * attese della stampa, altrimenti la grafica può uscire ruotata di 90°.
+ */
+function cornersOf(hull: number[][], w: number, h: number, ratio: number): Quad {
+  let minArea = Infinity
+  let theta = 0
+  for (let i = 0; i < hull.length; i++) {
+    const a = hull[i]
+    const b = hull[(i + 1) % hull.length]
+    const ang = Math.atan2(b[1] - a[1], b[0] - a[0])
+    const cs = Math.cos(-ang)
+    const sn = Math.sin(-ang)
+    let mnx = Infinity, mxx = -Infinity, mny = Infinity, mxy = -Infinity
+    for (const p of hull) {
+      const rx = p[0] * cs - p[1] * sn
+      const ry = p[0] * sn + p[1] * cs
+      if (rx < mnx) mnx = rx
+      if (rx > mxx) mxx = rx
+      if (ry < mny) mny = ry
+      if (ry > mxy) mxy = ry
+    }
+    const area = (mxx - mnx) * (mxy - mny)
+    if (area < minArea) { minArea = area; theta = ang }
+  }
+  const cs = Math.cos(-theta)
+  const sn = Math.sin(-theta)
+  let tl = hull[0], tr = hull[0], br = hull[0], bl = hull[0]
+  let s1 = Infinity, s2 = -Infinity, s3 = Infinity, s4 = -Infinity
+  for (const p of hull) {
+    const rx = p[0] * cs - p[1] * sn
+    const ry = p[0] * sn + p[1] * cs
+    if (rx + ry < s1) { s1 = rx + ry; tl = p }
+    if (rx + ry > s2) { s2 = rx + ry; br = p }
+    if (rx - ry > s4) { s4 = rx - ry; tr = p }
+    if (rx - ry < s3) { s3 = rx - ry; bl = p }
+  }
+  const corners = [tl, tr, br, bl]
+  const len = (i: number, j: number) => Math.hypot(corners[i][0] - corners[j][0], corners[i][1] - corners[j][1])
+  let pick = 0
+  let bestErr = Infinity
+  let bestCorner = Infinity
+  for (let r = 0; r < 4; r++) {
+    const i = (n: number) => (n + r) % 4
+    const bw = (len(i(0), i(1)) + len(i(3), i(2))) / 2
+    const bh = (len(i(0), i(3)) + len(i(1), i(2))) / 2
+    const err = Math.abs(Math.log(bw / bh / ratio))
+    const corner = corners[i(0)][0] + corners[i(0)][1]
+    if (err < bestErr - 1e-6 || (Math.abs(err - bestErr) < 1e-6 && corner < bestCorner)) {
+      bestErr = err
+      bestCorner = corner
+      pick = r
+    }
+  }
+  const i = (n: number) => (n + pick) % 4
+  return [corners[i(0)], corners[i(1)], corners[i(2)], corners[i(3)]].map(
+    ([x, y]) => [x / w, y / h],
+  ) as Quad
+}
+
 function invert3(m: number[]) {
   const [a, b, c, d, e, f, g, h, i] = m
   const A = e * i - f * h
@@ -62,14 +150,26 @@ function invert3(m: number[]) {
 
 interface BaseLayer {
   key: string
-  /** Foto ridimensionata al riquadro di lavoro. */
+  /** Foto ridimensionata al riquadro di lavoro, col verde già sostituito. */
   data: ImageData
   /** Luminanza normalizzata sul soggetto: è l'ombreggiatura riusata sulla stampa. */
   shade: Float32Array
+  /** Aree trovate dal verde: maschera esatta e spigoli, per id di area. */
+  green: Map<string, GreenArea>
   x: number
   y: number
   w: number
   h: number
+}
+
+/**
+ * Area di stampa ricavata dal green screen. La maschera è esatta, quindi gli
+ * angoli arrotondati di uno schermo restano arrotondati; il quadrilatero serve
+ * comunque, perché è lui a portare la prospettiva nella mappatura delle UV.
+ */
+interface GreenArea {
+  mask: Uint8Array
+  quad: Quad
 }
 
 function smoothstep(a: number, b: number, x: number) {
@@ -129,11 +229,15 @@ export class PhotoMockupRenderer {
 
     this.lastAreas = []
     for (const area of opts.view.areas) {
-      const matrix = squareToQuad(expandQuad(area.quad, OVERFILL), base.w, base.h)
+      const detected = base.green.get(area.id)
+      const quad = detected?.quad ?? area.quad
+      if (!quad) continue
+      // il verde dà già il confine esatto: allargarlo sconfinerebbe sulla cornice
+      const matrix = squareToQuad(detected ? quad : expandQuad(quad, OVERFILL), base.w, base.h)
       const inverse = invert3(matrix)
       this.lastAreas.push({ id: area.id, matrix, inverse })
       const art = opts.artworks[area.id]
-      if (art) this.compositeArtwork(out, base, area, inverse, art)
+      if (art) this.compositeArtwork(out, base, area, quad, inverse, art, detected?.mask)
     }
 
     const tmp = document.createElement('canvas')
@@ -195,10 +299,13 @@ export class PhotoMockupRenderer {
     const shade = new Float32Array(w * h)
     for (let i = 0; i < w * h; i++) shade[i] = lum[i] / refL
 
+    const green = this.findGreenAreas(opts.view, data, lum, shade, w, h)
+
     this.geom = {
       key,
       data,
       shade,
+      green,
       w,
       h,
       x: Math.round((opts.width - w) / 2),
@@ -206,6 +313,117 @@ export class PhotoMockupRenderer {
     }
     this.tinted = null
     return this.geom
+  }
+
+  /**
+   * Trova le aree dipinte di verde e le neutralizza.
+   *
+   * Il verde serve a due cose insieme: dice dove sta l'area di stampa, con gli
+   * spigoli esatti e una maschera che segue anche gli angoli arrotondati di uno
+   * schermo; e porta la luce della scena, perché è stato dipinto sotto ombre e
+   * riflessi. Una volta misurato viene sostituito da carta bianca che conserva
+   * quella stessa luce, così a grafica assente resta un pannello credibile
+   * invece di una macchia verde.
+   *
+   * Con più aree verdi nella stessa foto contano da sinistra a destra,
+   * nell'ordine in cui sono dichiarate.
+   */
+  private findGreenAreas(
+    view: PhotoView,
+    data: ImageData,
+    lum: Float32Array,
+    shade: Float32Array,
+    w: number,
+    h: number,
+  ) {
+    const found = new Map<string, GreenArea>()
+    const areas = view.areas.filter((a) => a.green)
+    if (!areas.length) return found
+
+    const px = data.data
+    const seen = new Uint8Array(w * h)
+    const comps: number[][] = []
+    const stack: number[] = []
+    for (let start = 0; start < w * h; start++) {
+      if (seen[start]) continue
+      seen[start] = 1
+      if (!isGreen(px[start * 4], px[start * 4 + 1], px[start * 4 + 2])) continue
+      const pixels: number[] = []
+      stack.push(start)
+      while (stack.length) {
+        const p = stack.pop()!
+        pixels.push(p)
+        const col = p % w
+        for (const q of [p - 1, p + 1, p - w, p + w]) {
+          if (q < 0 || q >= w * h || seen[q]) continue
+          if (Math.abs((q % w) - col) > 1) continue
+          seen[q] = 1
+          if (isGreen(px[q * 4], px[q * 4 + 1], px[q * 4 + 2])) stack.push(q)
+        }
+      }
+      if (pixels.length > w * h * 0.002) comps.push(pixels)
+    }
+    comps.sort((a, b) => b.length - a.length)
+    const chosen = comps.slice(0, areas.length)
+    const leftOf = (c: number[]) => c.reduce((m, p) => Math.min(m, p % w), w)
+    chosen.sort((a, b) => leftOf(a) - leftOf(b))
+
+    chosen.forEach((pixels, index) => {
+      const area = areas[index]
+      if (!area) return
+      const mask = new Uint8Array(w * h)
+      for (const p of pixels) mask[p] = 1
+
+      // La luce si normalizza sul verde stesso: il suo punto più chiaro è la
+      // carta in piena luce, il resto scende con le ombre della scena.
+      const sorted = pixels.map((p) => lum[p]).sort((a, b) => a - b)
+      const refGreen = Math.max(0.15, sorted[Math.floor(sorted.length * 0.97)])
+      for (const p of pixels) {
+        const k = Math.min(1.15, lum[p] / refGreen)
+        shade[p] = k
+        const v = clamp255(k * 255)
+        px[p * 4] = v
+        px[p * 4 + 1] = v
+        px[p * 4 + 2] = v
+      }
+
+      // Sbavatura del verde: dove qualcosa passa davanti all'area — l'auto
+      // sfocata davanti al cartellone — i pixel restano misti e tengono una
+      // dominante verde che il key non ha preso. Nell'intorno dell'area il
+      // canale verde viene riportato alla media di rosso e blu, che è quello
+      // che fa una spill suppression da chroma key. Solo nell'intorno: più in
+      // là c'è dell'edera vera che non va toccata.
+      const near = new Uint8Array(mask)
+      const spread = Math.max(3, Math.round(Math.max(w, h) * 0.016))
+      const prev = new Uint8Array(w * h)
+      for (let pass = 0; pass < spread; pass++) {
+        prev.set(near)
+        for (let p = 0; p < w * h; p++) {
+          if (prev[p]) continue
+          const col = p % w
+          if ((col > 0 && prev[p - 1]) || (col < w - 1 && prev[p + 1]) ||
+              (p >= w && prev[p - w]) || (p < w * (h - 1) && prev[p + w])) near[p] = 1
+        }
+      }
+      for (let p = 0; p < w * h; p++) {
+        if (!near[p] || mask[p]) continue
+        const r = px[p * 4]
+        const g = px[p * 4 + 1]
+        const b = px[p * 4 + 2]
+        const neutral = (r + b) / 2
+        if (g > neutral) px[p * 4 + 1] = neutral
+      }
+
+      const border: number[][] = []
+      for (const p of pixels) {
+        const col = p % w
+        const row = (p / w) | 0
+        if (col === 0 || col === w - 1 || row === 0 || row === h - 1 ||
+            !mask[p - 1] || !mask[p + 1] || !mask[p - w] || !mask[p + w]) border.push([col, row])
+      }
+      found.set(area.id, { mask, quad: cornersOf(convexHull(border), w, h, area.ratio ?? 1) })
+    })
+    return found
   }
 
   /**
@@ -242,11 +460,13 @@ export class PhotoMockupRenderer {
     out: ImageData,
     base: BaseLayer,
     area: PhotoArea,
+    quad: Quad,
     inverse: number[],
     art: PhotoArtwork,
+    mask?: Uint8Array,
   ) {
-    const xs = area.quad.map((p) => p[0] * base.w)
-    const ys = area.quad.map((p) => p[1] * base.h)
+    const xs = quad.map((p) => p[0] * base.w)
+    const ys = quad.map((p) => p[1] * base.h)
     const minX = Math.max(0, Math.floor(Math.min(...xs)))
     const maxX = Math.min(base.w - 1, Math.ceil(Math.max(...xs)))
     const minY = Math.max(0, Math.floor(Math.min(...ys)))
@@ -258,7 +478,7 @@ export class PhotoMockupRenderer {
     // Le proporzioni dell'area si misurano sui lati del quadrilatero, non sul
     // riquadro che lo contiene: su una foto in prospettiva quel riquadro è più
     // grande del quadrilatero, e la grafica finirebbe schiacciata.
-    const q = area.quad
+    const q = quad
     const side = (a: number[], b: number[]) =>
       Math.hypot((a[0] - b[0]) * base.w, (a[1] - b[1]) * base.h)
     const quadW = (side(q[0], q[1]) + side(q[3], q[2])) / 2
@@ -303,6 +523,9 @@ export class PhotoMockupRenderer {
       for (let x = minX; x <= maxX; x++) {
         const i = y * base.w + x
         if (dst[i * 4 + 3] < 8) continue
+        // con il green screen il confine è la maschera, non il quadrilatero:
+        // così gli angoli arrotondati di uno schermo restano arrotondati
+        if (mask && !mask[i]) continue
         // dal pixel al quadrato unitario dell'area
         const px = x + 0.5
         const py = y + 0.5

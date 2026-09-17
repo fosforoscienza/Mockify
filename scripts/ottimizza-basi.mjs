@@ -37,7 +37,14 @@ let after = 0
 const done = []
 
 for await (const file of walk(ROOT)) {
-  if (!/\.(png|jpe?g)$/i.test(file)) continue
+  if (!/\.(png|jpe?g|webp)$/i.test(file)) continue
+  // i webp già leggeri e già sotto misura non hanno niente da guadagnare:
+  // rifarli significherebbe solo ricomprimere e perdere un po' di qualità
+  const stat = await fs.stat(file)
+  if (/\.webp$/i.test(file) && stat.size < 1_200_000) {
+    const m = await sharp(await fs.readFile(file)).metadata()
+    if (Math.max(m.width, m.height) <= MAX_SIDE) continue
+  }
   const src = await fs.readFile(file)
   const meta = await sharp(src).metadata()
   const long = Math.max(meta.width, meta.height)

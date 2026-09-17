@@ -98,5 +98,24 @@ hai il livello ombre/pieghe separato puoi aggiungere anche `fronte-ombre.png` in
 scala di grigi: migliora la resa della stampa, ma è facoltativo — altrimenti lo
 ricavo dalla foto stessa.
 
-L'area di stampa non devi indicarmela: la definisco io su ogni file, e resta poi
-regolabile dai comandi di posizione e dimensione.
+## L'area di stampa: dipingila di verde
+
+Il modo migliore per dirmi dov'è l'area di stampa è **dipingerla di verde
+pieno** nella foto, come un green screen. L'app la ritrova da sola, con gli
+spigoli esatti: non servono coordinate, e una foto nuova funziona senza che io
+tocchi il codice.
+
+Il verde va **sotto le luci e le ombre della scena**, non sopra: in Photoshop il
+livello verde con sopra quello delle ombre in Moltiplica. Serve a due cose
+insieme. Il colore dice dove sta l'area — e la maschera segue anche gli angoli
+arrotondati di uno schermo, cosa che un rettangolo non farebbe. La luminanza
+dice com'è illuminata: a grafica applicata la fascia di sole continua a cadere
+sul manifesto, invece di lasciarlo piatto e incollato. Dove non c'è grafica il
+verde viene sostituito da carta bianca che conserva quella stessa luce.
+
+Verde pieno tipo `#00FF00`, purché non sia un colore presente altrove nella
+foto in modo massiccio. Un po' di sbavatura verde attorno all'area — un'auto
+sfocata che passa davanti al cartellone — la tolgo io.
+
+Sulle foto senza verde l'area la definisco a mano, e resta comunque regolabile
+dai comandi di posizione e dimensione.
