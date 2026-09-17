@@ -1,47 +1,63 @@
 # Basi fotografiche per i mockup
 
-Qui dentro vanno le foto reali dei capi, che Mockify usa come base al posto dei
-modelli disegnati. Ogni base è una singola immagine del capo fotografato dritto,
-su cui l'app proietta la grafica caricata dall'utente.
+Qui dentro vanno le foto reali dei prodotti, che Mockify usa come base al posto
+dei modelli disegnati: l'app ci proietta sopra la grafica caricata dall'utente.
 
-## Dove caricare i file
+## Struttura
 
-Una cartella per tipo di mockup, un file per vista:
+Tre livelli, sempre: **prodotto / versione / vista**.
 
 ```
-public/basi/tshirt/fronte.png
-public/basi/tshirt/retro.png
-public/basi/felpa/fronte.png
-public/basi/felpa/retro.png
-public/basi/cappello/fronte.png
-public/basi/cappello/tre-quarti.png
+public/basi/<prodotto>/<versione>/<vista>.png
 ```
 
-Se hai più modelli dello stesso capo, aggiungi il nome del modello come
-sottocartella: `public/basi/cappello/trucker/fronte.png`.
+- **prodotto** — cartella fissa, già creata. Non aggiungerne di nuove senza
+  dirmelo: a ognuna corrisponde una voce nell'elenco dei mockup.
+- **versione** — un modello diverso dello stesso prodotto (`01`, `02`, `03`…).
+  Diventa una variante selezionabile nella barra in alto. Ogni foto di un
+  prodotto *diverso* va in una versione sua: la felpa con cappuccio e quella
+  girocollo sono due versioni, non due file nella stessa cartella.
+- **vista** — il nome del file dice da che lato è ripreso il prodotto:
+  `fronte.png`, `retro.png`, `destra.png`, `sinistra.png`, `tre-quarti.png`,
+  `alto.png`. Più viste nella stessa cartella = più inquadrature dello stesso
+  modello, scelte dall'utente.
 
-## Formato
+Cartelle pronte:
 
-- **PNG con sfondo trasparente** (canale alpha), non JPEG: i mockup di Mockify
-  non hanno sfondo, quindi il capo va già scontornato.
-- **Lato lungo almeno 2000 px**, meglio 3000 px: l'export arriva a 300 dpi.
-- **Capo dritto e centrato**, fotografato frontalmente, senza prospettiva
-  marcata. Niente manichino visibile, niente ombra sul fondo (l'ombra la
-  aggiunge l'app, così resta coerente con lo sfondo scelto).
-- **Colore del capo: bianco o grigio chiaro neutro.** Da una base chiara si
-  ricava qualsiasi colore mantenendo pieghe e ombre; da una base scura no.
-- Pieghe e ombre devono essere ben leggibili: sono quelle che l'app riusa per
-  far seguire alla stampa l'andamento del tessuto.
+```
+tshirt/              01 02 03 04
+felpa/               01 (con cappuccio) 02 (girocollo) 03
+cappello-baseball/   01 02
+cappello-pescatore/  01 02
+telefono/            01 02 03 04
+manifesto/           70x100-01 70x100-02 600x300-01 600x300-02
+```
+
+Per il manifesto il nome della versione porta anche il formato, così i due
+formati restano separati. Se ti servono più versioni di quelle create, aggiungi
+pure `05`, `06`… con lo stesso schema.
+
+## Requisiti dei file
+
+- **PNG con sfondo trasparente** (canale alpha), non JPEG: i mockup non hanno
+  sfondo, quindi il prodotto va già scontornato.
+- **Lato lungo almeno 2000 px**, meglio 3000: l'export arriva a 300 dpi.
+- **Prodotto bianco o grigio chiaro neutro.** È il requisito più importante per
+  i capi: da una base chiara ricavo qualunque colore mantenendo pieghe e ombre,
+  da una base scura no. Per telefono e manifesto non conta.
+- **Ripresa frontale o in tre quarti netti**, prodotto centrato, senza manichino
+  visibile e **senza ombra sul fondo**: l'ombra la aggiunge l'app, così resta
+  coerente con lo sfondo scelto.
+- Pieghe e ombre del tessuto devono essere ben leggibili: sono quelle che l'app
+  riusa per far seguire alla stampa l'andamento del capo.
 
 ## PSD o PNG?
 
-**PNG.** Il browser non legge i PSD, quindi un PSD andrebbe comunque esportato.
-Se parti da un PSD con smart object, esporta:
+**PNG.** Il browser non legge i PSD, quindi andrebbero comunque esportati. Se
+parti da un PSD con smart object esporta il prodotto da solo, scontornato. Se
+hai il livello ombre/pieghe separato puoi aggiungere anche `fronte-ombre.png` in
+scala di grigi: migliora la resa della stampa, ma è facoltativo — altrimenti lo
+ricavo dalla foto stessa.
 
-1. il capo da solo, scontornato, in PNG (è il file indispensabile);
-2. se ce l'hai come livello separato, anche il livello di ombre/pieghe in
-   scala di grigi, come `fronte-ombre.png`: migliora la resa della stampa sul
-   tessuto, ma è facoltativo — altrimenti lo ricavo dalla foto stessa.
-
-Non serve che indichi l'area di stampa: la definisco io sul file, e la trovi poi
+L'area di stampa non devi indicarmela: la definisco io su ogni file, e resta poi
 regolabile dai comandi di posizione e dimensione.
