@@ -57,31 +57,31 @@ export class MockupViewer {
 
     const pmrem = new THREE.PMREMGenerator(this.renderer)
     this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
-    this.scene.environmentIntensity = 0.42
+    this.scene.environmentIntensity = 0.34
     pmrem.dispose()
 
-    this.keyLight = new THREE.DirectionalLight(0xffffff, 2.15)
+    this.keyLight = new THREE.DirectionalLight(0xffffff, 1.62)
     this.keyLight.position.set(1.1, 1.8, 1.6)
     this.keyLight.castShadow = true
     this.keyLight.shadow.mapSize.set(2048, 2048)
     this.keyLight.shadow.bias = -0.0012
-    this.keyLight.shadow.radius = 5
+    this.keyLight.shadow.radius = 2
     this.keyLight.shadow.normalBias = 0.012
     this.scene.add(this.keyLight, this.keyLight.target)
 
-    const fill = new THREE.DirectionalLight(0xdfe6f5, 0.55)
+    const fill = new THREE.DirectionalLight(0xdfe6f5, 0.3)
     fill.position.set(-1.6, 0.6, 1.1)
     this.scene.add(fill)
 
-    const rim = new THREE.DirectionalLight(0xffffff, 0.45)
+    const rim = new THREE.DirectionalLight(0xffffff, 0.3)
     rim.position.set(-0.4, 1.0, -1.8)
     this.scene.add(rim)
 
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.22))
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.16))
 
     this.shadowPlane = new THREE.Mesh(
       new THREE.PlaneGeometry(6, 6),
-      new THREE.ShadowMaterial({ opacity: 0.2, transparent: true }),
+      new THREE.ShadowMaterial({ opacity: 0.26, transparent: true }),
     )
     this.shadowPlane.rotation.x = -Math.PI / 2
     this.shadowPlane.receiveShadow = true

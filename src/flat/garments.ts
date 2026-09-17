@@ -25,11 +25,19 @@ export interface Band {
   ribbed?: boolean
 }
 
+/** Pezzo applicato: tasca, toppa. Un'area piena in rilievo. */
+export interface Patch {
+  points: Pt[]
+  height: number
+  shade?: number
+}
+
 export interface GarmentView {
   outline: Pt[]
   neckHole: Pt[]
   seams: Seam[]
   bands: Band[]
+  patches?: Patch[]
   /** Area di stampa in unità capo, centro e dimensioni. */
   print: { cx: number; cy: number; w: number; h: number }
   /** Etichetta interna, solo sul retro. */
@@ -212,6 +220,7 @@ function viewOf(p: Params, side: 'front' | 'back'): GarmentView {
 
   const seams: Seam[] = []
   const bands: Band[] = []
+  const patches: Patch[] = []
 
   // spalle: dalla scollatura al punto spalla
   for (const s of [-1, 1]) {
@@ -255,7 +264,13 @@ function viewOf(p: Params, side: 'front' | 'back'): GarmentView {
     26,
     hemLine,
   )
-  bands.push({ points: hemLine, height: 0.9, width: 0.024, shade: 0.02 })
+  bands.push({
+    points: hemLine,
+    height: 0.9,
+    width: 0.024,
+    shade: 0.02,
+    ribbed: p.ribbed,
+  })
   seams.push({ points: hemLine, depth: -1.3, width: 0.003, stitch: true })
 
   // fondo manica
@@ -272,7 +287,7 @@ function viewOf(p: Params, side: 'front' | 'back'): GarmentView {
       pt(a.x + nx * inset, a.y + ny * inset),
       pt(b.x + nx * inset, b.y + ny * inset),
     ]
-    bands.push({ points: cuff, height: 0.8, width: 0.02, shade: 0.02 })
+    bands.push({ points: cuff, height: 0.8, width: 0.02, shade: 0.02, ribbed: p.ribbed })
     seams.push({ points: cuff, depth: -1.2, width: 0.003, stitch: true })
   }
 
@@ -326,8 +341,15 @@ function viewOf(p: Params, side: 'front' | 'back'): GarmentView {
     )
     line(pt(w / 2 + 0.012, bottom + 0.02), pt(w / 2 + 0.012, top - 0.085), 8, pocketPath)
     quad(pt(w / 2 + 0.012, top - 0.085), pt(w / 2 + 0.01, top - 0.03), pt(w / 2 - 0.03, top), 10, pocketPath)
-    bands.push({ points: pocketPath, height: 1.1, width: 0.006 })
-    seams.push({ points: pocketPath, depth: -0.8, width: 0.0035, stitch: true })
+    patches.push({ points: pocketPath, height: 1.9, shade: 0.015 })
+    seams.push({ points: pocketPath, depth: -1.4, width: 0.0035, stitch: true })
+  }
+
+  if (p.hood) {
+    const hw = p.hood.halfWidth
+    const base: Pt[] = [pt(-hw * 0.97, yS - 0.004)]
+    quad(pt(-hw * 0.97, yS - 0.004), pt(0, yS + 0.014), pt(hw * 0.97, yS - 0.004), 18, base)
+    seams.push({ points: base, depth: -1.8, width: 0.005, stitch: true })
   }
 
   if (p.hood && side === 'front') {
@@ -337,7 +359,18 @@ function viewOf(p: Params, side: 'front' | 'back'): GarmentView {
       const y0 = yS - p.neckBack - drop - 0.004
       const cord: Pt[] = [pt(x, y0)]
       quad(pt(x, y0), pt(x + s * 0.012, y0 - 0.07), pt(x + s * 0.02, y0 - 0.15), 12, cord)
-      bands.push({ points: cord, height: 2.4, width: 0.009, shade: -0.06 })
+      bands.push({ points: cord, height: 3.2, width: 0.011, shade: -0.05 })
+      const tip = cord[cord.length - 1]
+      patches.push({
+        points: [
+          pt(tip.x - 0.006, tip.y + 0.004),
+          pt(tip.x + 0.006, tip.y + 0.004),
+          pt(tip.x + 0.006, tip.y - 0.018),
+          pt(tip.x - 0.006, tip.y - 0.018),
+        ],
+        height: 3.6,
+        shade: 0.1,
+      })
     }
   }
 
@@ -352,6 +385,7 @@ function viewOf(p: Params, side: 'front' | 'back'): GarmentView {
     neckHole: neckHoleOf(p, drop),
     seams,
     bands,
+    patches,
     print: { cx: 0, cy: printCy, w: printW, h: printH },
     label:
       side === 'back'
@@ -366,17 +400,17 @@ const HOODIE: Params = {
   hemWidth: 0.54,
   shoulderWidth: 0.5,
   shoulderSlope: 0.05,
-  neckWidth: 0.2,
-  neckDropFront: 0.075,
-  neckDropBack: 0.02,
-  neckBack: 0.028,
+  neckWidth: 0.25,
+  neckDropFront: 0.085,
+  neckDropBack: 0.022,
+  neckBack: 0.03,
   sleeveLength: 0.44,
   sleeveAngle: 0.62,
   sleeveOpen: 0.135,
   armpitDrop: 0.24,
   waist: 0.0,
   hemCurve: 0.006,
-  hood: { halfWidth: 0.2, height: 0.2 },
+  hood: { halfWidth: 0.215, height: 0.15 },
   pocket: true,
   ribbed: true,
 }

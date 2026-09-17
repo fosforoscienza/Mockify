@@ -30,29 +30,41 @@ export interface FlatArtwork {
   transform: ArtTransform2D
 }
 
+export type FlatView = 'front' | 'back' | 'both'
+
 export interface FlatRenderOptions {
   spec: GarmentSpec
-  view: 'front' | 'back'
+  view: FlatView
   color: string
   width: number
   height: number
   background: string | null
   shadow: boolean
   artwork?: FlatArtwork | null
+  /** Solo nella vista affiancata: la grafica del retro. */
+  artworkBack?: FlatArtwork | null
 }
 
-interface BaseLayer {
+/** Parte costosa: dipende da sagoma, vista e dimensioni, non dal colore. */
+interface GeometryLayer {
   key: string
   width: number
   height: number
-  image: ImageData
-  canvas: HTMLCanvasElement
+  light: Float32Array
+  alpha: Uint8Array
+  mask: Uint8Array
   /** Rettangolo dell'area di stampa in pixel. */
   print: { x: number; y: number; w: number; h: number }
   shade: Float32Array
   gradX: Float32Array
   gradY: Float32Array
-  mask: Uint8Array
+}
+
+/** Parte economica: il capo tinto del colore scelto. */
+interface BaseLayer extends GeometryLayer {
+  colorKey: string
+  image: ImageData
+  canvas: HTMLCanvasElement
 }
 
 const LIGHT = normalize(-0.42, -0.6, 0.68)
@@ -80,9 +92,13 @@ function knee(v: number) {
 }
 
 export class FlatGarmentRenderer {
+  private geom: GeometryLayer | null = null
   private base: BaseLayer | null = null
   private layout = { scale: 1, offsetX: 0, offsetY: 0 }
   private patchCanvas = document.createElement('canvas')
+  private subFront?: FlatGarmentRenderer
+  private subBack?: FlatGarmentRenderer
+  private content = { x: 0, y: 0, w: 0, h: 0 }
 
   /** Da unità capo a pixel del canvas. */
   private toPx(p: Pt) {
@@ -97,6 +113,10 @@ export class FlatGarmentRenderer {
     if (target.width !== opts.width || target.height !== opts.height) {
       target.width = opts.width
       target.height = opts.height
+    }
+    if (opts.view === 'both') {
+      this.renderBoth(ctx, opts)
+      return
     }
     const base = this.ensureBase(opts)
 
@@ -119,25 +139,116 @@ export class FlatGarmentRenderer {
     }
   }
 
+  /** Riquadro occupato dal capo dentro il canvas, in pixel. */
+  contentRect() {
+    return this.content
+  }
+
   /** Coordinate dell'area di stampa, per il trascinamento della grafica. */
   printRect() {
     return this.base?.print ?? null
   }
 
-  private baseKey(opts: FlatRenderOptions) {
-    return [opts.spec.id, opts.view, opts.color, opts.width, opts.height].join('|')
+  /**
+   * Vista affiancata: fronte e retro leggermente sovrapposti, con l'ombra del
+   * capo davanti proiettata su quello dietro. Esce in un file solo.
+   */
+  private renderBoth(ctx: CanvasRenderingContext2D, opts: FlatRenderOptions) {
+    const { width, height } = opts
+    ctx.clearRect(0, 0, width, height)
+    if (opts.background) {
+      ctx.fillStyle = opts.background
+      ctx.fillRect(0, 0, width, height)
+    }
+
+    const w = Math.round(width * 0.56)
+    const h = Math.round(height * 0.94)
+    const y = Math.round((height - h) / 2)
+
+    this.subBack ??= new FlatGarmentRenderer()
+    this.subFront ??= new FlatGarmentRenderer()
+    const sub = { ...opts, width: w, height: h, background: null, shadow: false }
+    const backCanvas = document.createElement('canvas')
+    this.subBack.render(backCanvas, { ...sub, view: 'back', artwork: opts.artworkBack ?? null })
+    const frontCanvas = document.createElement('canvas')
+    this.subFront.render(frontCanvas, { ...sub, view: 'front', artwork: opts.artwork ?? null })
+
+    // posizione calcolata sul riquadro reale del capo: la sovrapposizione è
+    // un'ottava parte della sua larghezza, e la coppia resta centrata
+    const c = this.subFront.contentRect()
+    const step = c.w * 0.62
+    const totalW = c.w + step
+    const frontX = Math.round((width - totalW) / 2 - c.x)
+    const backX = Math.round(frontX + step)
+
+    if (opts.shadow) this.drawSilhouetteShadow(ctx, backCanvas, backX, y, width * 0.01, 0.4)
+    ctx.drawImage(backCanvas, backX, y)
+    // ombra del capo davanti su quello dietro
+    this.drawSilhouetteShadow(ctx, frontCanvas, frontX, y, width * 0.012, 0.42)
+    ctx.drawImage(frontCanvas, frontX, y)
+  }
+
+  /** Proietta la sagoma di un canvas come ombra sfocata. */
+  private drawSilhouetteShadow(
+    ctx: CanvasRenderingContext2D,
+    source: HTMLCanvasElement,
+    x: number,
+    y: number,
+    offset: number,
+    alpha: number,
+  ) {
+    const shadow = document.createElement('canvas')
+    shadow.width = source.width
+    shadow.height = source.height
+    const sctx = shadow.getContext('2d')!
+    sctx.drawImage(source, 0, 0)
+    sctx.globalCompositeOperation = 'source-in'
+    sctx.fillStyle = '#000'
+    sctx.fillRect(0, 0, shadow.width, shadow.height)
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.filter = `blur(${Math.max(2, Math.round(offset * 1.6))}px)`
+    ctx.drawImage(shadow, x + offset, y + offset * 0.8)
+    ctx.restore()
   }
 
   private ensureBase(opts: FlatRenderOptions) {
-    const key = this.baseKey(opts)
-    if (this.base && this.base.key === key) return this.base
-    this.base = this.buildBase(opts, key)
+    const key = [opts.spec.id, opts.view, opts.width, opts.height].join('|')
+    if (!this.geom || this.geom.key !== key) {
+      this.geom = this.buildGeometry(opts, key)
+      this.base = null
+    }
+    if (!this.base || this.base.colorKey !== opts.color) {
+      this.base = this.colorize(this.geom, opts.color)
+    }
     return this.base
+  }
+
+  /** Ricolorazione: moltiplica la luce già calcolata, niente da ricostruire. */
+  private colorize(geom: GeometryLayer, color: string): BaseLayer {
+    const rgb = hexToRgb(color)
+    const image = new ImageData(geom.width, geom.height)
+    const data = image.data
+    for (let i = 0; i < geom.light.length; i++) {
+      const a = geom.alpha[i]
+      if (!a) continue
+      const light = geom.light[i]
+      const i4 = i * 4
+      data[i4] = 255 * knee(rgb.r * light)
+      data[i4 + 1] = 255 * knee(rgb.g * light)
+      data[i4 + 2] = 255 * knee(rgb.b * light)
+      data[i4 + 3] = a
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = geom.width
+    canvas.height = geom.height
+    canvas.getContext('2d')!.putImageData(image, 0, 0)
+    return { ...geom, colorKey: color, image, canvas }
   }
 
   // ------------------------------------------------------------- costruzione
 
-  private buildBase(opts: FlatRenderOptions, key: string): BaseLayer {
+  private buildGeometry(opts: FlatRenderOptions, key: string): GeometryLayer {
     const view = opts.view === 'front' ? opts.spec.front : opts.spec.back
     const { width, height } = opts
     const box = bounds(view.outline)
@@ -149,11 +260,19 @@ export class FlatGarmentRenderer {
       offsetY: height / 2 + ((box.y + box.h / 2) * scale),
     }
 
+    const topLeft = this.toPx({ x: box.x, y: box.y + box.h })
+    this.content = {
+      x: topLeft.x,
+      y: topLeft.y,
+      w: box.w * scale,
+      h: box.h * scale,
+    }
+
     const mask = this.rasterizeMask(view, width, height)
     const field = new ShapeField(view.outline, bounds(view.outline, 0.05), 200, 0.15)
     const detail = this.rasterizeDetails(view, width, height)
     const heights = this.buildHeights(view, field, mask, detail, width, height, scale)
-    const image = this.shade(opts, view, field, mask, heights, width, height, scale)
+    const alpha = this.computeLight(opts, view, mask, heights, width, height, scale)
 
     // dati dell'area di stampa, usati per integrare la grafica
     const c = this.toPx({ x: view.print.cx, y: view.print.cy })
@@ -179,12 +298,7 @@ export class FlatGarmentRenderer {
       }
     }
 
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    canvas.getContext('2d')!.putImageData(image, 0, 0)
-
-    return { key, width, height, image, canvas, print, shade, gradX, gradY, mask }
+    return { key, width, height, light: heights.light, alpha, mask, print, shade, gradX, gradY }
   }
 
   /** 255 = tessuto, 120 = interno visibile dalla scollatura, 0 = fuori. */
@@ -248,8 +362,16 @@ export class FlatGarmentRenderer {
     const toRed = (mm: number) => 128 + Math.max(-127, Math.min(127, mm * 28))
     const toGreen = (shade: number) => 128 - Math.max(-127, Math.min(127, shade * 255))
 
+    view.patches?.forEach((patch) => {
+      ctx.fillStyle = `rgb(${Math.round(toRed(patch.height))},${Math.round(toGreen(patch.shade ?? 0))},0)`
+      ctx.beginPath()
+      this.tracePath(ctx, patch.points)
+      ctx.fill()
+    })
+
     view.bands.forEach((band: Band) => {
       stroke(band.points, band.width, toRed(band.height), toGreen(band.shade ?? 0))
+      if (band.ribbed) this.strokeRibs(ctx, band, toRed)
     })
     view.seams.forEach((seam: Seam) => {
       stroke(seam.points, seam.width, toRed(seam.depth), toGreen(0.04))
@@ -295,6 +417,45 @@ export class FlatGarmentRenderer {
     blurFloat(relief, width, height, Math.max(1, Math.round(this.layout.scale * 0.004)))
     blurFloat(albedo, width, height, Math.max(1, Math.round(this.layout.scale * 0.003)))
     return { relief, albedo }
+  }
+
+  /**
+   * Costine: trattini perpendicolari alla fascia, come i solchi di una maglia
+   * a coste. Sono il dettaglio che fa leggere collo, polsini e orlo.
+   */
+  private strokeRibs(
+    ctx: CanvasRenderingContext2D,
+    band: Band,
+    toRed: (mm: number) => number,
+  ) {
+    const step = 0.0032
+    const half = (band.width / 2) * 0.92
+    ctx.lineWidth = Math.max(1, step * 0.42 * this.layout.scale)
+    let carry = 0
+    let up = true
+    for (let i = 1; i < band.points.length; i++) {
+      const a = band.points[i - 1]
+      const b = band.points[i]
+      const dx = b.x - a.x
+      const dy = b.y - a.y
+      const len = Math.hypot(dx, dy)
+      if (len < 1e-6) continue
+      const nx = dy / len
+      const ny = -dx / len
+      for (let t = carry; t < len; t += step) {
+        const cx = a.x + (dx / len) * t
+        const cy = a.y + (dy / len) * t
+        const p1 = this.toPx({ x: cx + nx * half, y: cy + ny * half })
+        const p2 = this.toPx({ x: cx - nx * half, y: cy - ny * half })
+        ctx.strokeStyle = `rgb(${Math.round(toRed(up ? band.height * 0.45 : -band.height * 0.3))},128,0)`
+        ctx.beginPath()
+        ctx.moveTo(p1.x, p1.y)
+        ctx.lineTo(p2.x, p2.y)
+        ctx.stroke()
+        up = !up
+        carry = t + step - len
+      }
+    }
   }
 
   /** Mappa di rilievo completa e relativo gradiente. */
@@ -372,19 +533,16 @@ export class FlatGarmentRenderer {
     return { h, gx: gxArr, gy: gyArr, low, prof, light: new Float32Array(width * height), detail }
   }
 
-  private shade(
+  private computeLight(
     opts: FlatRenderOptions,
     view: GarmentView,
-    _field: ShapeField,
     mask: Uint8Array,
     heights: ReturnType<FlatGarmentRenderer['buildHeights']>,
     width: number,
     height: number,
     scale: number,
   ) {
-    const rgb = hexToRgb(opts.color)
-    const img = new ImageData(width, height)
-    const data = img.data
+    const alpha = new Uint8Array(width * height)
     const mmPerPx = 1000 / scale
     const noise = new ValueNoise(128, 31)
     const ribPx = Math.max(2.1, scale * 0.0011)
@@ -422,22 +580,17 @@ export class FlatGarmentRenderer {
         if (m < 200) light *= 0.62
 
         heights.light[idx] = light
-
-        const i4 = idx * 4
-        data[i4] = 255 * knee(rgb.r * light)
-        data[i4 + 1] = 255 * knee(rgb.g * light)
-        data[i4 + 2] = 255 * knee(rgb.b * light)
-        data[i4 + 3] = 255
+        alpha[idx] = 255
       }
     }
 
     // bordo morbido: la stoffa non ha un contorno vettoriale
-    this.featherEdges(data, mask, width, height)
+    this.featherEdges(alpha, mask, width, height)
     void view
-    return img
+    return alpha
   }
 
-  private featherEdges(data: Uint8ClampedArray, mask: Uint8Array, width: number, height: number) {
+  private featherEdges(alpha: Uint8Array, mask: Uint8Array, width: number, height: number) {
     for (let py = 1; py < height - 1; py++) {
       for (let px = 1; px < width - 1; px++) {
         const idx = py * width + px
@@ -447,7 +600,7 @@ export class FlatGarmentRenderer {
         if (!mask[idx + 1]) open++
         if (!mask[idx - width]) open++
         if (!mask[idx + width]) open++
-        if (open) data[idx * 4 + 3] = 235 - open * 24
+        if (open) alpha[idx] = 235 - open * 24
       }
     }
   }

@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import { paperMaterial } from '../materials'
-import { softShadowTexture } from '../textures'
 import { deg } from '../geometry'
 import { artworkMesh } from '../slot'
 import { buildSheetGeometry, type SurfaceFn } from '../surface'
@@ -35,8 +34,8 @@ const VARIANTS: Record<string, { label: string; description: string; poses: Shee
     label: 'Due fogli sovrapposti',
     description: 'Un foglio appoggiato sull\u2019altro, con un angolo scoperto.',
     poses: [
-      { x: -0.2, z: 0.05, rot: deg(-3), lift: 0, flipped: false, curl: 0.22, curlSide: -1 },
-      { x: 0.19, z: -0.03, rot: deg(5), lift: 0.03, flipped: true, curl: 0.26, curlSide: 1 },
+      { x: 0.19, z: -0.03, rot: deg(5), lift: 0, flipped: true, curl: 0.26, curlSide: 1 },
+      { x: -0.2, z: 0.05, rot: deg(-3), lift: 0.013, flipped: false, curl: 0.22, curlSide: -1 },
     ],
   },
   sparsi: {
@@ -44,8 +43,8 @@ const VARIANTS: Record<string, { label: string; description: string; poses: Shee
     description: 'Composizione sovrapposta con fronte e retro visibili.',
     poses: [
       { x: -0.32, z: 0.15, rot: deg(-12), lift: 0, flipped: false, curl: 0.34, curlSide: -1 },
-      { x: 0.32, z: 0.06, rot: deg(9), lift: 0.028, flipped: true, curl: 0.3, curlSide: 1 },
-      { x: -0.04, z: -0.32, rot: deg(-3), lift: 0.056, flipped: false, curl: 0.24, curlSide: -1 },
+      { x: 0.32, z: 0.06, rot: deg(9), lift: 0.008, flipped: true, curl: 0.3, curlSide: 1 },
+      { x: -0.04, z: -0.32, rot: deg(-3), lift: 0.016, flipped: false, curl: 0.24, curlSide: -1 },
     ],
   },
   pila: {
@@ -132,20 +131,6 @@ function build(cfg: BuildConfig): BuiltMockup {
     holder.rotation.y = pose.rot
     holder.position.set(pose.x, pose.lift + i * 0.0006, pose.z)
 
-    // ombra di contatto: macchia morbida appoggiata sul piano sotto il foglio
-    const shade = new THREE.Mesh(
-      new THREE.PlaneGeometry(w * 1.45, h * 1.45),
-      new THREE.MeshBasicMaterial({
-        map: softShadowTexture(),
-        transparent: true,
-        opacity: 0.85,
-        depthWrite: false,
-      }),
-    )
-    shade.rotation.x = -Math.PI / 2
-    shade.position.set(0.016, -0.0012 - pose.lift * 0.92, 0.02)
-    shade.renderOrder = -2
-    holder.add(shade)
     group.add(holder)
   })
 

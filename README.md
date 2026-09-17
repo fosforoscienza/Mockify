@@ -14,8 +14,8 @@ Nessun server, nessuna registrazione: le immagini non lasciano il computer.
 
 | Mockup | Varianti | Aree di stampa | Opzioni |
 | --- | --- | --- | --- |
-| **T-shirt** | fronte, retro (resa in piano) | fronte, retro | colore libero + 7 campioni |
-| **Felpa con cappuccio** | fronte, retro (resa in piano) | fronte, retro | colore libero + 7 campioni |
+| **T-shirt** | fronte, retro, fronte + retro affiancati | fronte, retro | colore libero + 18 campioni (gamma B&C E150) |
+| **Felpa con cappuccio** | fronte, retro, fronte + retro affiancati | fronte, retro | colore libero + 18 campioni |
 | **Cappello con visiera** | baseball, snapback, dad hat, trucker | fronte, retro | colore libero + 6 campioni |
 | **Fogli sparsi** | due affiancati, due sovrapposti, tre sparsi, pila | fronte, retro (due facciate diverse) | A4, A5, Letter, quadrato, A4 orizzontale |
 | **Poster appeso** | cornice a bastone, mollette, puntine, foglio libero | grafica intera | A3, A2, A1, 50×70, 70×50, 60×60, 6×3 m |

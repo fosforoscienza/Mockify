@@ -230,6 +230,28 @@ export function softShadowTexture(): THREE.Texture {
   return tex
 }
 
+/**
+ * Ombra rettangolare sfumata: segue la forma di un foglio invece di essere
+ * una macchia tonda. La parte piena occupa il 60% della texture, così il piano
+ * si dimensiona al foglio e la sfumatura resta tutt'attorno.
+ */
+export function sheetShadowTexture(): THREE.Texture {
+  const key = 'sheet-shadow'
+  if (cache.has(key)) return cache.get(key)!
+  const size = 256
+  const canvas = makeCanvas(size)
+  const ctx = canvas.getContext('2d')!
+  const inset = size * 0.07
+  ctx.filter = 'blur(7px)'
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'
+  ctx.fillRect(inset, inset, size - inset * 2, size - inset * 2)
+  ctx.filter = 'none'
+  const tex = new THREE.CanvasTexture(canvas)
+  tex.colorSpace = THREE.SRGBColorSpace
+  cache.set(key, tex)
+  return tex
+}
+
 export function disposeTextureCache() {
   cache.forEach((t) => t.dispose())
   cache.clear()

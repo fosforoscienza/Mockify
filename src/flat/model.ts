@@ -7,19 +7,36 @@ export interface FlatConfig {
   slots: { id: string; label: string; hint?: string; view: 'front' | 'back' }[]
 }
 
+/**
+ * Gamma ispirata alla B&C E150, il riferimento chiesto per le t-shirt.
+ * I valori sono una resa ravvicinata, non i codici ufficiali del produttore:
+ * la scheda colore va confrontata con il campionario prima della stampa.
+ */
 const GARMENT_COLORS = [
-  { id: 'white', label: 'Bianco', hex: '#f3f2ef' },
-  { id: 'black', label: 'Nero', hex: '#1c1c1e', dark: true },
-  { id: 'heather', label: 'Grigio melange', hex: '#b6b9bd' },
-  { id: 'navy', label: 'Blu navy', hex: '#26334c', dark: true },
-  { id: 'sand', label: 'Sabbia', hex: '#ddceb4' },
-  { id: 'forest', label: 'Verde bosco', hex: '#2f5044', dark: true },
-  { id: 'red', label: 'Rosso', hex: '#a52f2b' },
+  { id: 'white', label: 'White', hex: '#f6f5f2' },
+  { id: 'black', label: 'Black', hex: '#1b1b1d', dark: true },
+  { id: 'navy', label: 'Navy', hex: '#1f2a44', dark: true },
+  { id: 'red', label: 'Red', hex: '#c0211d' },
+  { id: 'royal', label: 'Royal Blue', hex: '#1f4fa0', dark: true },
+  { id: 'sky', label: 'Sky Blue', hex: '#8cc6e6' },
+  { id: 'kelly', label: 'Kelly Green', hex: '#1f8c4a' },
+  { id: 'bottle', label: 'Bottle Green', hex: '#14443a', dark: true },
+  { id: 'sport-grey', label: 'Sport Grey', hex: '#b0aeaa' },
+  { id: 'ash', label: 'Ash', hex: '#d8d7d2' },
+  { id: 'anthracite', label: 'Anthracite', hex: '#3b3d3f', dark: true },
+  { id: 'orange', label: 'Orange', hex: '#e2610f' },
+  { id: 'gold', label: 'Gold', hex: '#e4ae22' },
+  { id: 'burgundy', label: 'Burgundy', hex: '#6a2333', dark: true },
+  { id: 'sand', label: 'Sand', hex: '#d9c8a8' },
+  { id: 'khaki', label: 'Khaki', hex: '#7d7a5c' },
+  { id: 'purple', label: 'Purple', hex: '#4b2a70', dark: true },
+  { id: 'pink', label: 'Millennial Pink', hex: '#e6b3b7' },
 ]
 
 const VIEWS = [
   { id: 'front', label: 'Fronte' },
   { id: 'back', label: 'Retro' },
+  { id: 'both', label: 'Fronte + retro' },
 ]
 
 export const tshirtFlat: MockupDefinition = {

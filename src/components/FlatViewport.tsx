@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { FlatGarmentRenderer, type FlatArtwork } from '../flat/render'
+import { FlatGarmentRenderer, type FlatArtwork, type FlatView } from '../flat/render'
 import type { FlatConfig } from '../flat/model'
 import type { ArtTransform } from '../three/artwork'
 import { imageFromDataTransfer } from '../lib/image'
@@ -9,13 +9,19 @@ export interface MockupSurface {
   aspect(): number
 }
 
+export interface FlatArt {
+  image: HTMLImageElement
+  transform: ArtTransform
+}
+
 interface Props {
   flat: FlatConfig
-  view: 'front' | 'back'
+  view: FlatView
   color: string
   background: string | null
   shadow: boolean
-  artwork: { image: HTMLImageElement; transform: ArtTransform } | null
+  /** Grafiche delle due facciate: servono entrambe nella vista affiancata. */
+  artworks: { front: FlatArt | null; back: FlatArt | null }
   slotId: string | null
   onReady(surface: MockupSurface): void
   onDragTransform(slot: string, offsetX: number, offsetY: number): void
@@ -34,7 +40,7 @@ export default function FlatViewport({
   color,
   background,
   shadow,
-  artwork,
+  artworks,
   slotId,
   onReady,
   onDragTransform,
@@ -47,8 +53,9 @@ export default function FlatViewport({
   const [size, setSize] = useState({ w: 0, h: 0 })
   const [dropping, setDropping] = useState(false)
   const dragRef = useRef<{ startX: number; startY: number; ox: number; oy: number } | null>(null)
-  const propsRef = useRef({ flat, view, color, background, shadow, artwork })
-  propsRef.current = { flat, view, color, background, shadow, artwork }
+  const artwork = view === 'back' ? artworks.back : artworks.front
+  const propsRef = useRef({ flat, view, color, background, shadow, artworks })
+  propsRef.current = { flat, view, color, background, shadow, artworks }
 
   useEffect(() => {
     const wrap = wrapRef.current
@@ -79,7 +86,8 @@ export default function FlatViewport({
           height: pxH,
           background: bg,
           shadow: p.shadow,
-          artwork: toArtwork(p.artwork),
+          artwork: toArtwork(p.view === 'back' ? p.artworks.back : p.artworks.front),
+          artworkBack: toArtwork(p.artworks.back),
         })
         return canvas.toDataURL('image/png')
       },
@@ -99,11 +107,13 @@ export default function FlatViewport({
       background,
       shadow,
       artwork: toArtwork(artwork),
+      artworkBack: toArtwork(artworks.back),
     })
-  }, [flat, view, color, background, shadow, artwork, size])
+  }, [flat, view, color, background, shadow, artwork, artworks.back, size])
 
   /** Il riquadro occupato dalla grafica, per capire se il puntatore la tocca. */
   const artRect = useCallback(() => {
+    if (view === 'both') return null
     const print = rendererRef.current.printRect()
     if (!print || !artwork) return null
     const aspect = artwork.image.naturalWidth / artwork.image.naturalHeight
@@ -124,7 +134,7 @@ export default function FlatViewport({
       dh,
       print,
     }
-  }, [artwork])
+  }, [artwork, view])
 
   const pointerPx = (event: React.PointerEvent | PointerEvent) => {
     const canvas = canvasRef.current!
@@ -204,8 +214,14 @@ export default function FlatViewport({
         onPointerCancel={endDrag}
       />
       <div className="viewport-hint">
-        <span>{artwork ? 'Trascina la grafica per spostarla' : 'Trascina qui un PNG o un JPG'}</span>
-        <span>Fronte e retro dalla barra in alto</span>
+        <span>
+          {view === 'both'
+            ? 'Vista affiancata: usa i cursori per posizionare la grafica'
+            : artwork
+              ? 'Trascina la grafica per spostarla'
+              : 'Trascina qui un PNG o un JPG'}
+        </span>
+        <span>Fronte, retro e vista affiancata dalla barra in alto</span>
       </div>
     </div>
   )

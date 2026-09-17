@@ -60,7 +60,8 @@ export default function EditorPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.activeModel])
 
-  const view: 'front' | 'back' = cfg.variant === 'back' ? 'back' : 'front'
+  const view: 'front' | 'back' | 'both' =
+    cfg.variant === 'back' ? 'back' : cfg.variant === 'both' ? 'both' : 'front'
 
   // i capi in piano dichiarano i propri slot: uno per vista
   useEffect(() => {
@@ -70,7 +71,7 @@ export default function EditorPage() {
 
   // vista e area di stampa restano allineate: cambiando l'una cambia l'altra
   useEffect(() => {
-    if (!flat || !state.activeSlot) return
+    if (!flat || !state.activeSlot || view === 'both') return
     const slot = flat.slots.find((s) => s.id === state.activeSlot)
     if (slot && slot.view !== view) {
       dispatch({ type: 'set-variant', variant: slot.view })
@@ -79,7 +80,7 @@ export default function EditorPage() {
   }, [state.activeSlot, flat])
 
   useEffect(() => {
-    if (!flat) return
+    if (!flat || view === 'both') return
     const slot = flat.slots.find((s) => s.view === view)
     if (slot && slot.id !== state.activeSlot) {
       dispatch({ type: 'set-active-slot', slot: slot.id })
@@ -155,6 +156,18 @@ export default function EditorPage() {
   const activeSlot = state.activeSlot
   const current = activeSlot ? slotState(state, activeSlot) : null
   const currentImage = current?.imageId ? state.images[current.imageId] ?? null : null
+  // nella vista affiancata servono entrambe le facciate insieme
+  const flatArtworks = useMemo(() => {
+    const pick = (slotView: 'front' | 'back') => {
+      const slot = flat?.slots.find((s) => s.view === slotView)
+      if (!slot) return null
+      const st = slotState(state, slot.id)
+      const image = st.imageId ? state.images[st.imageId] : null
+      return image ? { image: image.element, transform: st.transform } : null
+    }
+    return { front: pick('front'), back: pick('back') }
+  }, [flat, state])
+
   const filledSlots = useMemo(
     () => new Set(slots.filter((s) => slotState(state, s.id).imageId).map((s) => s.id)),
     [slots, state],
@@ -221,12 +234,8 @@ export default function EditorPage() {
             color={cfg.color}
             background={background}
             shadow={shadow}
-            slotId={state.activeSlot}
-            artwork={
-              currentImage && current
-                ? { image: currentImage.element, transform: current.transform }
-                : null
-            }
+            slotId={view === 'both' ? null : state.activeSlot}
+            artworks={flatArtworks}
             onReady={(surface) => {
               surfaceRef.current = surface
               setReady(true)
