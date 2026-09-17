@@ -19,8 +19,6 @@ interface SheetPose {
   /** Angolo che si solleva: -1 a sinistra, +1 a destra. Tiene l'arricciatura
    *  lontana dalla zona di sovrapposizione, così i fogli non si compenetrano. */
   curlSide: -1 | 1
-  /** Foglio sepolto in una pila: se ne vede solo il bordo, niente grafica. */
-  blank?: boolean
 }
 
 const VARIANTS: Record<string, { label: string; description: string; poses: SheetPose[] }> = {
@@ -55,8 +53,8 @@ const VARIANTS: Record<string, { label: string; description: string; poses: Shee
     label: 'Pila con foglio girato',
     description: 'Piccola risma e un foglio voltato accanto.',
     poses: [
-      { x: -0.26, z: 0, rot: deg(-4), lift: 0, flipped: false, curl: 0.16, curlSide: -1, blank: true },
-      { x: -0.25, z: 0.005, rot: deg(-1), lift: 0.003, flipped: false, curl: 0.16, curlSide: -1, blank: true },
+      { x: -0.26, z: 0, rot: deg(-4), lift: 0, flipped: false, curl: 0.16, curlSide: -1 },
+      { x: -0.25, z: 0.005, rot: deg(-1), lift: 0.003, flipped: false, curl: 0.16, curlSide: -1 },
       { x: -0.245, z: 0.01, rot: deg(2), lift: 0.006, flipped: false, curl: 0.18, curlSide: -1 },
       { x: 0.3, z: 0.02, rot: deg(8), lift: 0, flipped: true, curl: 0.3, curlSide: 1 },
     ],
@@ -159,27 +157,25 @@ function build(cfg: BuildConfig): BuiltMockup {
     bm.receiveShadow = true
     sheet.add(fm, bm, rm)
 
-    if (!pose.blank) {
-      const artFront = artworkMesh(fn, {
-        slot: 'fronte',
-        segU: 56,
-        segV: 56,
-        offset: thickness / 2 + 0.0003,
-        roughness: 0.7,
-      })
-      const artBack = artworkMesh(fn, {
-        slot: 'retro',
-        segU: 56,
-        segV: 56,
-        offset: -(thickness / 2 + 0.0003),
-        flip: true,
-        mirrorU: true,
-        roughness: 0.7,
-      })
-      sheet.add(artFront, artBack)
-      fronts.push(artFront)
-      backs.push(artBack)
-    }
+    const artFront = artworkMesh(fn, {
+      slot: 'fronte',
+      segU: 56,
+      segV: 56,
+      offset: thickness / 2 + 0.0003,
+      roughness: 0.7,
+    })
+    const artBack = artworkMesh(fn, {
+      slot: 'retro',
+      segU: 56,
+      segV: 56,
+      offset: -(thickness / 2 + 0.0003),
+      flip: true,
+      mirrorU: true,
+      roughness: 0.7,
+    })
+    sheet.add(artFront, artBack)
+    fronts.push(artFront)
+    backs.push(artBack)
 
     // dal piano verticale al piano d'appoggio; i fogli girati mostrano il retro
     if (pose.flipped) sheet.rotation.set(Math.PI / 2, 0, Math.PI)

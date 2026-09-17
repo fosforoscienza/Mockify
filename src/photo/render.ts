@@ -247,12 +247,22 @@ export class PhotoMockupRenderer {
 
     const t = art.transform
     const imageAspect = art.width / art.height
-    // l'area è trattata come un quadrato unitario: la grafica ci sta dentro
-    // conservando le proporzioni, poi scala, rotazione e scostamento
-    const areaAspect = aw / ah
+    // Le proporzioni dell'area si misurano sui lati del quadrilatero, non sul
+    // riquadro che lo contiene: su una foto in prospettiva quel riquadro è più
+    // grande del quadrilatero, e la grafica finirebbe schiacciata.
+    const q = area.quad
+    const side = (a: number[], b: number[]) =>
+      Math.hypot((a[0] - b[0]) * base.w, (a[1] - b[1]) * base.h)
+    const quadW = (side(q[0], q[1]) + side(q[3], q[2])) / 2
+    const quadH = (side(q[0], q[3]) + side(q[1], q[2])) / 2
+    const areaAspect = quadW / quadH
+    // 'cover' riempie l'area e deborda sul lato lungo: è quello che serve dove
+    // la stampa copre tutto il supporto — schermi, manifesti, poster. Su un
+    // capo la stampa resta invece inscritta nell'area petto.
+    const cover = area.fill === 'cover'
     let fw: number
     let fh: number
-    if (imageAspect >= areaAspect) {
+    if ((imageAspect >= areaAspect) !== cover) {
       fw = t.scale
       fh = (t.scale * areaAspect) / imageAspect
     } else {

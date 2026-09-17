@@ -159,7 +159,7 @@ function build(cfg: BuildConfig): BuiltMockup {
 export const poster: MockupDefinition = {
   id: 'poster',
   name: 'Poster appeso',
-  category: 'stampa',
+  category: 'affissione',
   tagline: '4 allestimenti, formati da A3 ad A1',
   description:
     'Poster sospeso con cornice a bastone, mollette, puntine o libero. La carta ha un’ondulazione realistica e la grafica la segue.',

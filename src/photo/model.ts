@@ -96,7 +96,7 @@ export const telefonoPhoto: MockupDefinition = {
 export const manifestoPhoto: MockupDefinition = {
   id: 'manifesto',
   name: 'Manifesto affisso',
-  category: 'stampa',
+  category: 'affissione',
   tagline: 'Affissione 6 × 3 e doppio poster',
   description:
     'Manifesti in ambiente: il cartellone 6 × 3 sotto il cavalcavia, di fronte e di tre quarti, e due poster 70 × 100 incorniciati su un muro. Le luci e le ombre della scena cadono sulla grafica.',

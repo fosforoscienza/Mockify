@@ -20,6 +20,7 @@ export const MOCKUPS: MockupDefinition[] = [
 
 export const CATEGORIES: { id: MockupDefinition['category']; label: string }[] = [
   { id: 'abbigliamento', label: 'Abbigliamento' },
+  { id: 'affissione', label: 'Poster e manifesti' },
   { id: 'stampa', label: 'Stampati' },
   { id: 'editoria', label: 'Editoria' },
   { id: 'digitale', label: 'Digitale' },

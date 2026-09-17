@@ -66,6 +66,29 @@ ombre; l'app sostituisce solo il pannello bianco.
 
 - **Lato lungo almeno 2000 px**, meglio 3000: l'export arriva a 300 dpi. I file
   `_low` a 2000 px vanno bene per provare; se hai le versioni piene, caricale.
+- Carica pure il PNG che esce dal fotoritocco, senza preoccuparti del peso.
+
+## Dopo ogni caricamento: ottimizza
+
+I PNG da fotoritocco pesano diversi megabyte l'uno, e il browser li scarica
+interi appena si sceglie il mockup: la prima apertura resta bloccata per
+secondi. Dopo aver caricato foto nuove va quindi eseguito una volta:
+
+```
+npm install        # solo la prima volta
+node scripts/ottimizza-basi.mjs --dry   # mostra cosa farebbe
+node scripts/ottimizza-basi.mjs         # ridimensiona e converte
+```
+
+Le foto vengono portate al lato lungo di 3000 px e riscritte in WebP, che sulle
+fotografie pesa una frazione del PNG e tiene comunque il canale alpha dei
+soggetti scontornati. Sul materiale attuale: 66 MB → 5,5 MB, con le stesse
+dimensioni in pixel dove già stavano sotto i 3000.
+
+Gli originali vengono cancellati, perché restano nella storia di git e tenerli
+nella cartella pubblica significherebbe pubblicarli lo stesso a ogni deploy.
+I nomi dei file cambiano estensione, quindi dopo l'ottimizzazione vanno
+aggiornati i percorsi in `src/photo/bases.ts`.
 
 ## PSD o PNG?
 
