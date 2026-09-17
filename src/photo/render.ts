@@ -152,20 +152,33 @@ function fitQuadAround(quad: Quad, border: number[][], w: number, h: number): Qu
     let vmin = 0
     let vmax = 1
     for (const [x, y] of border) {
-      const d = inv[6] * x + inv[7] * y + inv[8]
-      const u = (inv[0] * x + inv[1] * y + inv[2]) / d
-      const v = (inv[3] * x + inv[4] * y + inv[5]) / d
+      // il centro del pixel, che è dove il compositing campiona: usando lo
+      // spigolo si perdeva mezzo pixel, e sul lato destro e in basso — dove
+      // u e v arrivano a 1 — quel mezzo pixel bastava a far scartare l'ultima
+      // colonna e l'ultima riga, lasciando un filo di pannello scoperto
+      const px = x + 0.5
+      const py = y + 0.5
+      const d = inv[6] * px + inv[7] * py + inv[8]
+      const u = (inv[0] * px + inv[1] * py + inv[2]) / d
+      const v = (inv[3] * px + inv[4] * py + inv[5]) / d
       if (u < umin) umin = u
       if (u > umax) umax = u
       if (v < vmin) vmin = v
       if (v > vmax) vmax = v
     }
-    if (umin > -0.0005 && vmin > -0.0005 && umax < 1.0005 && vmax < 1.0005) break
+    if (umin >= 0 && vmin >= 0 && umax <= 1 && vmax <= 1) break
     const at = (u: number, v: number): [number, number] => {
       const d = m[6] * u + m[7] * v + m[8]
       return [(m[0] * u + m[1] * v + m[2]) / d / w, (m[3] * u + m[4] * v + m[5]) / d / h]
     }
-    result = [at(umin, vmin), at(umax, vmin), at(umax, vmax), at(umin, vmax)]
+    // un margine minimo perché l'ultimo pixel non cada proprio sul confine
+    const pad = 0.004
+    result = [
+      at(umin - pad, vmin - pad),
+      at(umax + pad, vmin - pad),
+      at(umax + pad, vmax + pad),
+      at(umin - pad, vmax + pad),
+    ]
   }
   return result
 }
