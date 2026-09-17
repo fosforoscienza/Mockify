@@ -1270,3 +1270,85 @@ input[type='range']::-moz-range-thumb {
 .viewport.flat canvas {
   cursor: default;
 }
+
+/* ------------------------------------------------ avviso di nuova versione */
+
+.update-banner {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 120;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 540px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  border: 1px solid var(--accent-border);
+  box-shadow: var(--shadow);
+  animation: rise 0.25s ease;
+}
+
+.update-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent-bright);
+}
+
+.update-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.update-body strong {
+  font-size: 14px;
+}
+
+.update-body span {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.update-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--warn) !important;
+}
+
+.update-warn svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.update-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+@media (max-width: 680px) {
+  .update-banner {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    max-width: none;
+    flex-wrap: wrap;
+  }
+  .update-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

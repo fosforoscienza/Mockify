@@ -52,6 +52,16 @@ produzione (`main`) pubblica una nuova versione, gli altri branch ottengono un
 deploy di anteprima. Non servono variabili d'ambiente: l'app è
 interamente statica e lavora nel browser.
 
+## Aggiornamenti
+
+Ogni build scrive il proprio identificativo (su Vercel il commit) sia nel bundle
+sia in `/version.json`. Una scheda lasciata aperta confronta i due valori ogni
+cinque minuti e al ritorno sulla pagina: se non coincidono compare un avviso con
+il pulsante per ricaricare. Siccome ricaricare cancella il progetto in corso,
+quando ci sono grafiche caricate l'avviso lo dice e non mette in evidenza il
+pulsante di aggiornamento. Se un chunk non si carica — tipico subito dopo un
+deploy — la pagina si ricarica una sola volta da sé.
+
 ## Avvio
 
 ```bash

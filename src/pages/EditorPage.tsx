@@ -12,6 +12,7 @@ import { getMockup, MOCKUPS } from '../three/models'
 import type { MockupViewer } from '../three/viewer'
 import { artworkCount, initialState, modelState, reducer, slotState } from '../state/store'
 import { ImageError, loadImageFile } from '../lib/image'
+import { setUnsavedCount } from '../state/unsaved'
 import { downloadDataUrl, downloadPdf, safeFilename } from '../lib/download'
 
 export default function EditorPage() {
@@ -113,6 +114,12 @@ export default function EditorPage() {
     })
     viewer.setActiveSlot(state.activeSlot)
   }, [slots, state])
+
+  // l'avviso di aggiornamento deve sapere quanto c'è da perdere
+  useEffect(() => {
+    setUnsavedCount(pending)
+    return () => setUnsavedCount(0)
+  }, [pending])
 
   // avviso del browser alla chiusura: il lavoro non è salvato da nessuna parte
   useEffect(() => {
