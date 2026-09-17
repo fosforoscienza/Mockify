@@ -8,29 +8,54 @@ export interface FlatConfig {
 }
 
 /**
- * Gamma ispirata alla B&C E150, il riferimento chiesto per le t-shirt.
- * I valori sono una resa ravvicinata, non i codici ufficiali del produttore:
- * la scheda colore va confrontata con il campionario prima della stampa.
+ * Cartella colori B&C E150, trascritta dal campionario fornito: i valori sono
+ * letti dai campioni, non estratti da un file colore del produttore, quindi
+ * vanno confrontati con il campionario fisico prima di andare in stampa.
+ * I nomi sono descrittivi: lo scopo è riconoscere il campione, non citare la
+ * denominazione commerciale.
  */
 const GARMENT_COLORS = [
-  { id: 'white', label: 'White', hex: '#f6f5f2' },
-  { id: 'black', label: 'Black', hex: '#1b1b1d', dark: true },
-  { id: 'navy', label: 'Navy', hex: '#1f2a44', dark: true },
-  { id: 'red', label: 'Red', hex: '#c0211d' },
-  { id: 'royal', label: 'Royal Blue', hex: '#1f4fa0', dark: true },
-  { id: 'sky', label: 'Sky Blue', hex: '#8cc6e6' },
-  { id: 'kelly', label: 'Kelly Green', hex: '#1f8c4a' },
-  { id: 'bottle', label: 'Bottle Green', hex: '#14443a', dark: true },
-  { id: 'sport-grey', label: 'Sport Grey', hex: '#b0aeaa' },
-  { id: 'ash', label: 'Ash', hex: '#d8d7d2' },
-  { id: 'anthracite', label: 'Anthracite', hex: '#3b3d3f', dark: true },
-  { id: 'orange', label: 'Orange', hex: '#e2610f' },
-  { id: 'gold', label: 'Gold', hex: '#e4ae22' },
-  { id: 'burgundy', label: 'Burgundy', hex: '#6a2333', dark: true },
-  { id: 'sand', label: 'Sand', hex: '#d9c8a8' },
-  { id: 'khaki', label: 'Khaki', hex: '#7d7a5c' },
-  { id: 'purple', label: 'Purple', hex: '#4b2a70', dark: true },
-  { id: 'pink', label: 'Millennial Pink', hex: '#e6b3b7' },
+  { id: 'e150-41', label: 'Bianco', hex: '#ededed' },
+  { id: 'e150-01', label: 'Nero carbone', hex: '#2b2926', dark: true },
+  { id: 'e150-02', label: 'Blu notte', hex: '#141033', dark: true },
+  { id: 'e150-03', label: 'Blu royal', hex: '#29528e', dark: true },
+  { id: 'e150-04', label: 'Rosso cremisi', hex: '#c4262e' },
+  { id: 'e150-05', label: 'Grigio medio', hex: '#9a9da1' },
+  { id: 'e150-06', label: 'Crema', hex: '#e7dfd0' },
+  { id: 'e150-07', label: 'Sabbia', hex: '#beac94' },
+  { id: 'e150-08', label: 'Rosa cipria', hex: '#c9a79f' },
+  { id: 'e150-09', label: 'Giallo limone', hex: '#f7e463' },
+  { id: 'e150-10', label: 'Giallo oro', hex: '#f0be3c' },
+  { id: 'e150-11', label: 'Ambra', hex: '#f0a22e' },
+  { id: 'e150-12', label: 'Arancio', hex: '#ec6b2a' },
+  { id: 'e150-13', label: 'Rosso', hex: '#d8322a' },
+  { id: 'e150-14', label: 'Rosso scuro', hex: '#a72229' },
+  { id: 'e150-15', label: 'Rosa lampone', hex: '#d9527a' },
+  { id: 'e150-16', label: 'Bordeaux prugna', hex: '#5a2b36', dark: true },
+  { id: 'e150-17', label: 'Azzurro cielo', hex: '#9acfe8' },
+  { id: 'e150-18', label: 'Blu acciaio', hex: '#4a91be' },
+  { id: 'e150-19', label: 'Turchese', hex: '#3d93a3' },
+  { id: 'e150-20', label: 'Blu petrolio', hex: '#2a5c6b', dark: true },
+  { id: 'e150-21', label: 'Blu pervinca', hex: '#9cb4da' },
+  { id: 'e150-22', label: 'Blu denim', hex: '#5b82be' },
+  { id: 'e150-23', label: 'Blu ardesia', hex: '#4e5468', dark: true },
+  { id: 'e150-24', label: 'Antracite', hex: '#2e3033', dark: true },
+  { id: 'e150-25', label: 'Grigio scuro caldo', hex: '#33312f', dark: true },
+  { id: 'e150-26', label: 'Blu navy', hex: '#1e3272', dark: true },
+  { id: 'e150-27', label: 'Navy scuro', hex: '#1b2456', dark: true },
+  { id: 'e150-28', label: 'Viola', hex: '#3e2258', dark: true },
+  { id: 'e150-29', label: 'Viola indaco', hex: '#2b1240', dark: true },
+  { id: 'e150-30', label: 'Verde salvia', hex: '#94b25e' },
+  { id: 'e150-31', label: 'Verde lime', hex: '#a8c93c' },
+  { id: 'e150-32', label: 'Verde smeraldo', hex: '#45a86a' },
+  { id: 'e150-33', label: 'Verde bosco', hex: '#26402a', dark: true },
+  { id: 'e150-34', label: 'Verde grigio', hex: '#5e6360', dark: true },
+  { id: 'e150-35', label: 'Verde militare', hex: '#43452f', dark: true },
+  { id: 'e150-36', label: 'Bianco ghiaccio', hex: '#efefef' },
+  { id: 'e150-37', label: 'Grigio piombo', hex: '#53545a', dark: true },
+  { id: 'e150-38', label: 'Blu inchiostro', hex: '#131e2a', dark: true },
+  { id: 'e150-39', label: 'Nero', hex: '#060606', dark: true },
+  { id: 'e150-40', label: 'Marrone scuro', hex: '#3b2f2a', dark: true },
 ]
 
 const VIEWS = [

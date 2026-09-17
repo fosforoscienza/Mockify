@@ -173,10 +173,10 @@ export class FlatGarmentRenderer {
     const frontCanvas = document.createElement('canvas')
     this.subFront.render(frontCanvas, { ...sub, view: 'front', artwork: opts.artwork ?? null })
 
-    // posizione calcolata sul riquadro reale del capo: la sovrapposizione è
-    // un'ottava parte della sua larghezza, e la coppia resta centrata
+    // posizione calcolata sul riquadro reale del capo: il capo davanti copre
+    // una fetta di manica di quello dietro, senza mai arrivare alla sua stampa
     const c = this.subFront.contentRect()
-    const step = c.w * 0.62
+    const step = c.w * 0.52
     const totalW = c.w + step
     const frontX = Math.round((width - totalW) / 2 - c.x)
     const backX = Math.round(frontX + step)
