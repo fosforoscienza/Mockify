@@ -128,6 +128,48 @@ function cornersOf(hull: number[][], w: number, h: number, ratio: number): Quad 
   ) as Quad
 }
 
+/**
+ * Allarga il quadrilatero finché la regione ci sta dentro tutta.
+ *
+ * Gli spigoli presi dagli estremi del guscio sono inscritti nella regione, non
+ * circoscritti: su un pannello in prospettiva l'estremo di x+y non cade
+ * sull'angolo vero, e su uno schermo ad angoli arrotondati cade sull'arco,
+ * dentro l'angolo ideale. In tutti e due i casi la grafica veniva tagliata
+ * prima del bordo e restava un filo di pannello bianco scoperto.
+ *
+ * Qui il confine della regione viene riportato nello spazio del quadrilatero:
+ * se qualche punto esce da [0,1] il riquadro viene esteso fino a contenerlo e
+ * riproiettato nell'immagine. La maschera resta comunque a definire il bordo
+ * visibile, quindi allargare non fa sbordare niente.
+ */
+function fitQuadAround(quad: Quad, border: number[][], w: number, h: number): Quad {
+  let result = quad
+  for (let pass = 0; pass < 4; pass++) {
+    const m = squareToQuad(result, w, h)
+    const inv = invert3(m)
+    let umin = 0
+    let umax = 1
+    let vmin = 0
+    let vmax = 1
+    for (const [x, y] of border) {
+      const d = inv[6] * x + inv[7] * y + inv[8]
+      const u = (inv[0] * x + inv[1] * y + inv[2]) / d
+      const v = (inv[3] * x + inv[4] * y + inv[5]) / d
+      if (u < umin) umin = u
+      if (u > umax) umax = u
+      if (v < vmin) vmin = v
+      if (v > vmax) vmax = v
+    }
+    if (umin > -0.0005 && vmin > -0.0005 && umax < 1.0005 && vmax < 1.0005) break
+    const at = (u: number, v: number): [number, number] => {
+      const d = m[6] * u + m[7] * v + m[8]
+      return [(m[0] * u + m[1] * v + m[2]) / d / w, (m[3] * u + m[4] * v + m[5]) / d / h]
+    }
+    result = [at(umin, vmin), at(umax, vmin), at(umax, vmax), at(umin, vmax)]
+  }
+  return result
+}
+
 function invert3(m: number[]) {
   const [a, b, c, d, e, f, g, h, i] = m
   const A = e * i - f * h
@@ -421,7 +463,8 @@ export class PhotoMockupRenderer {
         if (col === 0 || col === w - 1 || row === 0 || row === h - 1 ||
             !mask[p - 1] || !mask[p + 1] || !mask[p - w] || !mask[p + w]) border.push([col, row])
       }
-      found.set(area.id, { mask, quad: cornersOf(convexHull(border), w, h, area.ratio ?? 1) })
+      const corners = cornersOf(convexHull(border), w, h, area.ratio ?? 1)
+      found.set(area.id, { mask, quad: fitQuadAround(corners, border, w, h) })
     })
     return found
   }
