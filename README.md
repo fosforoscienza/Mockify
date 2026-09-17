@@ -35,6 +35,15 @@ Nessun server, nessuna registrazione: le immagini non lasciano il computer.
 > caricata, alla chiusura della pagina compare l'avviso del browser e, uscendo
 > dall'editor, una finestra che ricorda di scaricare il file.
 
+## Deploy su Vercel
+
+Il repository contiene `vercel.json` già pronto: framework Vite, build
+`npm run build`, output in `dist/`, rewrite di tutte le rotte su `index.html`
+(l'app usa URL puliti tipo `/crea?m=poster`) e cache immutabile sugli asset.
+Collegando il repo a un progetto Vercel, ogni push sul branch di produzione
+pubblica una nuova versione. Non servono variabili d'ambiente: l'app è
+interamente statica e lavora nel browser.
+
 ## Avvio
 
 ```bash

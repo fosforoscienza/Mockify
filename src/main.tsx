@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
-import { HashRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import App from './App'
 import HomePage from './pages/HomePage'
 import './styles/global.css'
@@ -19,7 +19,7 @@ function Loading() {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
         <Route element={<App />}>
           <Route path="/" element={<HomePage />} />
@@ -34,6 +34,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="*" element={<HomePage />} />
         </Route>
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   </React.StrictMode>,
 )

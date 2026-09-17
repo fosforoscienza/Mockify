@@ -100,11 +100,13 @@ export default function EditorPage() {
     const handler = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey) return
       const anchor = (event.target as HTMLElement | null)?.closest('a')
-      if (!anchor) return
+      if (!anchor || anchor.target === '_blank') return
       const href = anchor.getAttribute('href')
-      if (!href || !href.startsWith('#/') || href === '#/crea') return
+      // solo i link interni dell'app, e solo se portano davvero fuori dall'editor
+      if (!href || !href.startsWith('/') || href.startsWith('//')) return
+      if (href.split('?')[0] === window.location.pathname) return
       event.preventDefault()
-      setLeaveTo(href.slice(1))
+      setLeaveTo(href)
     }
     document.addEventListener('click', handler, true)
     return () => document.removeEventListener('click', handler, true)
