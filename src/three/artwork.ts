@@ -193,7 +193,7 @@ export function createArtworkMaterial(opts: ArtworkMaterialOptions = {}) {
     },
     glow,
   }
-  mat.customProgramCacheKey = () => (glow > 0 ? 'mockify-artwork-glow' : 'mockify-artwork')
+  mat.customProgramCacheKey = () => (glow > 0 ? 'sagoma-artwork-glow' : 'sagoma-artwork')
   return mat
 }
 

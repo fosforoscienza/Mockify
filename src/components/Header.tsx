@@ -7,11 +7,11 @@ export default function Header() {
 
   return (
     <header className="header">
-      <Link to="/" className="logo" aria-label="Mockify, torna alla home">
+      <Link to="/" className="logo" aria-label="Sagoma, torna alla home">
         <span className="logo-mark" aria-hidden>
           <SparkIcon size={17} />
         </span>
-        Mockify
+        Sagoma
       </Link>
       <nav>
         <NavLink to="/" className={({ isActive }) => (isActive ? 'active' : '')} end>

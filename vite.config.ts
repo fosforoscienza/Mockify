@@ -15,7 +15,7 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      name: 'mockify-version-manifest',
+      name: 'sagoma-version-manifest',
       generateBundle() {
         this.emitFile({
           type: 'asset',

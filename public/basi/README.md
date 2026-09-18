@@ -1,6 +1,6 @@
 # Basi fotografiche per i mockup
 
-Qui dentro vanno le foto reali dei prodotti, che Mockify usa come base al posto
+Qui dentro vanno le foto reali dei prodotti, che Sagoma usa come base al posto
 dei modelli disegnati: l'app ci proietta sopra la grafica caricata dall'utente.
 
 ## Struttura

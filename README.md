@@ -1,12 +1,17 @@
-# Mockify
+# Sagoma
 
 **In produzione: https://mockify-murex.vercel.app**
 
-Generatore di mockup 3D che funziona interamente nel browser: carichi le tue
-grafiche in PNG o JPG, Mockify le adatta al modello scelto seguendo le pieghe
-del tessuto e della carta, e le esporta in **PNG** o **PDF** — con lo sfondo
-trasparente o del colore che scegli — nell'angolazione impostata ruotando la
-scena.
+Generatore di mockup che funziona interamente nel browser: carichi le tue
+grafiche in PNG o JPG, Sagoma le adatta al modello scelto seguendo le pieghe
+del tessuto e della carta, e le esporta in **PNG** o **PDF**, con lo sfondo
+trasparente o del colore che scegli.
+
+I mockup sono di due tipi. Capi, cappelli, telefoni e manifesti sono costruiti
+su **fotografie vere**: la stampa viene deformata nell'area di stampa e
+moltiplicata per la luce della foto, così pieghe e ombre della scena le passano
+sopra. Fogli, poster, brochure, libro e laptop sono **modelli 3D** generati al
+momento, che si ruotano liberamente prima di esportare.
 
 Nessun server, nessuna registrazione: le immagini non lasciano il computer.
 
@@ -47,7 +52,9 @@ Nessun server, nessuna registrazione: le immagini non lasciano il computer.
 Il repository contiene `vercel.json` già pronto: framework Vite, build
 `npm run build`, output in `dist/`, rewrite di tutte le rotte su `index.html`
 (l'app usa URL puliti tipo `/crea?m=poster`) e cache immutabile sugli asset.
-Il repo è collegato al progetto Vercel `mockify`: ogni push sul branch di
+Il repo è collegato al progetto Vercel `mockify`, nome rimasto da prima che
+l'app si chiamasse Sagoma: finché non viene rinominato lì, restano quel nome e
+l'indirizzo `mockify-murex.vercel.app`. Ogni push sul branch di
 produzione (`main`) pubblica una nuova versione, gli altri branch ottengono un
 deploy di anteprima. Non servono variabili d'ambiente: l'app è
 interamente statica e lavora nel browser.
@@ -89,9 +96,9 @@ src/
     textures.ts     tessuto, maglia, carta, tela, taglio pagine (canvas 2D)
     materials.ts    materiali condivisi
     viewer.ts       scena, luci, ombra, controlli, trascinamento, esportazione
-    models/         un file per mockup 3D (cappello, fogli, poster, brochure, libro)
-  flat/             capi disegnati in piano: sagome, campo di forma, rumore e
-                    renderer 2D con integrazione della stampa
+    models/         un file per mockup 3D (fogli, poster, brochure, libro, laptop)
+  photo/            mockup su fotografia: basi e aree di stampa, renderer con
+                    omografia, ombreggiatura e rilevamento del green screen
   components/       barra, elenco mockup, viewport, pannelli, icone SVG
   pages/            home ed editor
   state/            reducer del progetto (modello, opzioni, grafiche)
@@ -103,16 +110,16 @@ Due idee reggono tutto il progetto:
 - **Superfici parametriche condivise.** Il supporto e la grafica nascono dalla
   stessa funzione `(u, v) → punto`, quindi la stampa segue esattamente la
   curvatura di poster, brochure, dorso del libro o calotta del cappello.
-- **Capi resi in piano, non in 3D.** T-shirt e felpe non sono modelli
-  poligonali: `src/flat/` costruisce una mappa di rilievo del capo disteso —
-  forma d'insieme, pieghe orientate, grinze, collo, cuciture, orli — e la
-  illumina per pixel alla risoluzione richiesta. A quella scala si vede la
-  maglia del tessuto, cosa che un modello 3D con normal map non riesce a dare;
-  in cambio si rinuncia alla rotazione libera e restano due viste, fronte e
-  retro. La grafica caricata viene spostata dal gradiente delle pieghe e
-  moltiplicata per la stessa luce del capo, così segue la stoffa. Il colore è
-  libero perché ombre e pieghe moltiplicano la tinta invece di essere dipinte
-  sopra.
+- **Mockup su fotografia, non modellati.** Capi, cappelli, telefoni e manifesti
+  sono foto vere: `src/photo/` mappa la grafica nell'area di stampa con
+  un'omografia — quattro punti e non un rettangolo, perché su uno scatto in
+  prospettiva la stampa deve seguire l'inclinazione del soggetto — e la
+  moltiplica per la luminanza della foto, così le pieghe del tessuto e la fascia
+  di sole sul cartellone le passano sopra invece di lasciarla piatta. Il colore
+  dei capi resta libero perché la tinta scelta moltiplica la luminanza della
+  base, che è chiara. Dove la foto ha l'area dipinta di verde gli spigoli non si
+  scrivono a mano: li trova il renderer dal verde stesso, con una maschera
+  esatta che segue anche gli angoli arrotondati di uno schermo.
 
 Il canvas ha il canale alpha (`alpha: true`, clear alpha 0) e l'ombra a terra usa
 uno `ShadowMaterial`: senza sfondo il render resta trasparente fino

@@ -39,8 +39,8 @@ const FEATURES = [
   },
   {
     icon: <CursorIcon size={20} />,
-    title: 'Capi disegnati in piano',
-    text: 'T-shirt e felpe rese a piena risoluzione, fronte e retro: tessuto, pieghe e cuciture vere. Gli altri mockup si ruotano in 3D.',
+    title: 'Basi fotografiche',
+    text: 'Capi, cappelli, telefoni e manifesti sono fotografie vere: la stampa prende le pieghe del tessuto e le ombre della scena. Gli altri mockup si ruotano in 3D.',
   },
   {
     icon: <UploadIcon size={20} />,
@@ -57,7 +57,7 @@ const FEATURES = [
 const FAQ = [
   {
     q: 'Serve registrarsi?',
-    a: 'No. Mockify funziona interamente nel browser: le immagini non vengono caricate da nessuna parte.',
+    a: 'No. Sagoma funziona interamente nel browser: le immagini non vengono caricate da nessuna parte.',
   },
   {
     q: 'Posso scegliere il colore del capo?',
@@ -118,16 +118,16 @@ export default function HomePage() {
       <section className="hero">
         <div>
           <span className="eyebrow">
-            <SparkIcon size={14} /> Mockup 3D nel browser
+            <SparkIcon size={14} /> Mockup nel browser
           </span>
           <h1>
             Le tue grafiche su <em>mockup reali</em>, in pochi secondi.
           </h1>
           <p className="lead">
-            Carica un PNG o un JPG, Mockify lo adatta automaticamente al modello scelto — t-shirt,
+            Carica un PNG o un JPG, Sagoma lo adatta automaticamente al modello scelto — t-shirt,
             felpe, cappelli, poster, brochure, libri — lo fa seguire alle pieghe del tessuto e della
             carta, e ti restituisce un render pronto da usare — con lo sfondo trasparente o del
-            colore che scegli. I capi d’abbigliamento sono disegnati in piano, fronte e retro.
+            colore che scegli. Capi, cappelli e telefoni sono fotografie vere, non disegni.
           </p>
           <div className="hero-actions">
             <Link to="/crea" className="btn btn-primary">
@@ -157,7 +157,7 @@ export default function HomePage() {
           <h2>Come funziona</h2>
           <p>
             Quattro passaggi, tutti dentro la stessa finestra di lavoro. A sinistra scegli il
-            modello, al centro lavori in 3D, a destra carichi e regoli la grafica.
+            modello, al centro lavori sul mockup, a destra carichi e regoli la grafica.
           </p>
         </div>
         <div className="steps">
@@ -175,8 +175,8 @@ export default function HomePage() {
         <div className="section-head">
           <h2>I mockup disponibili</h2>
           <p>
-            Ogni modello è generato in 3D al momento: cambi variante, colore e formato e la grafica
-            si riadatta da sola, senza rifare il lavoro.
+            Ogni modello si ricostruisce al momento, sulla foto o in 3D: cambi variante, colore e
+            formato e la grafica si riadatta da sola, senza rifare il lavoro.
           </p>
         </div>
         <div className="gallery">
@@ -208,7 +208,7 @@ export default function HomePage() {
         <div className="callout">
           <WarningIcon size={20} />
           <div>
-            <strong>Il progetto non viene salvato.</strong> Mockify lavora solo nella memoria del
+            <strong>Il progetto non viene salvato.</strong> Sagoma lavora solo nella memoria del
             browser: se chiudi o ricarichi la pagina, il lavoro si perde. Quando hai almeno una
             grafica caricata, il browser mostra un avviso prima di chiudere — scarica sempre il PNG
             o il PDF prima di uscire.
@@ -233,7 +233,7 @@ export default function HomePage() {
       </section>
 
       <footer className="footer">
-        Mockify — mockup 3D generati nel browser. Nessun file lascia il tuo computer.
+        Sagoma — mockup generati nel browser. Nessun file lascia il tuo computer.
       </footer>
     </main>
   )

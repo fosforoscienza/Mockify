@@ -6,7 +6,7 @@ import HomePage from './pages/HomePage'
 import { markUpdateAvailable } from './lib/version'
 import './styles/global.css'
 
-const RELOAD_KEY = 'mockify-chunk-reload'
+const RELOAD_KEY = 'sagoma-chunk-reload'
 
 const store = {
   get(key: string) {

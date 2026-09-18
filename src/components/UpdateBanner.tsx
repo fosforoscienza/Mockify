@@ -21,7 +21,7 @@ export default function UpdateBanner() {
         <SparkIcon size={17} />
       </span>
       <div className="update-body">
-        <strong>È disponibile una nuova versione di Mockify</strong>
+        <strong>È disponibile una nuova versione di Sagoma</strong>
         {unsaved > 0 ? (
           <span className="update-warn">
             <WarningIcon size={14} />

@@ -189,7 +189,7 @@ export default function EditorPage() {
       const pxW = aspect >= 1 ? longSide : Math.round(longSide * aspect)
       const pxH = aspect >= 1 ? Math.round(longSide / aspect) : longSide
       const url = surface.snapshot(pxW, pxH, withBackground ? background : null)
-      const name = safeFilename(['mockify', model.name, cfg.variant])
+      const name = safeFilename(['sagoma', model.name, cfg.variant])
       if (format === 'png') {
         downloadDataUrl(url, `${name}.png`)
       } else {

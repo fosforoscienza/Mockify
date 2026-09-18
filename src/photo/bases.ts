@@ -120,7 +120,18 @@ export const TSHIRT_PHOTO: PhotoConfig = {
       views: [
         {
           file: '03/fronte.webp',
-          areas: [petto(rect(0.36, 0.36, 0.65, 0.63))],
+          areas: [
+            {
+              id: 'fronte',
+              label: 'Fronte',
+              // Il capo piegato offre una facciata larga: si stampa da sotto il
+              // colletto fin oltre la piega bassa. Quello che deborda dal capo
+              // non si vede, perché la foto è scontornata e il compositing
+              // salta i pixel trasparenti della base.
+              quad: rect(0.2, 0.34, 0.82, 0.87),
+              hint: 'Facciata piegata, sotto il colletto',
+            },
+          ],
         },
       ],
     },
