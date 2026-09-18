@@ -121,6 +121,21 @@ Due idee reggono tutto il progetto:
   scrivono a mano: li trova il renderer dal verde stesso, con una maschera
   esatta che segue anche gli angoli arrotondati di uno schermo.
 
+### Icona sulla schermata home
+
+iOS non usa il favicon SVG per l'icona della schermata home: senza un
+`apple-touch-icon` PNG Safari disegna una tessera con l'iniziale del sito. In
+`public/` ci sono quindi l'icona a 180 px per iOS, quelle a 192 e 512 px per il
+manifest e una variante *maskable* per Android, in cui la scintilla sta nella
+zona sicura che nessuna maschera ritaglia. Sono generate da `icona.svg` e
+`icona-maskable.svg`, che a differenza del favicon sono a tutto campo e senza
+angoli arrotondati: iOS e Android applicano la propria maschera, e un riquadro
+già stondato uscirebbe stondato due volte.
+
+Il manifest dichiara `display: browser` e non `standalone`: a schermo intero iOS
+gestisce male il download di un file generato in pagina, ed esportare è tutto il
+senso dell'app. Prima di passare a `standalone` va provato un export da iPhone.
+
 Il canvas ha il canale alpha (`alpha: true`, clear alpha 0) e l'ombra a terra usa
 uno `ShadowMaterial`: senza sfondo il render resta trasparente fino
 all'esportazione, con uno sfondo scelto il colore entra nella scena e quindi

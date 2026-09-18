@@ -1,0 +1,15 @@
+<!-- Variante "maskable" per Android: la scintilla sta nella zona sicura,
+     il cerchio centrale che nessuna maschera ritaglia. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2ba8be"/>
+      <stop offset="0.55" stop-color="#1c7f92"/>
+      <stop offset="1" stop-color="#0d5666"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#g)"/>
+  <g transform="translate(256 256) scale(10.4) translate(-16 -15.4)">
+    <path d="M16 6.4 18.1 13.3 25 15.4 18.1 17.5 16 24.4 13.9 17.5 7 15.4 13.9 13.3Z" fill="#f4f6f7"/>
+  </g>
+</svg>
