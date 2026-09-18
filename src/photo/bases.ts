@@ -124,11 +124,13 @@ export const TSHIRT_PHOTO: PhotoConfig = {
             {
               id: 'fronte',
               label: 'Fronte',
-              // Il capo piegato offre una facciata larga: si stampa da sotto il
-              // colletto fin oltre la piega bassa. Quello che deborda dal capo
-              // non si vede, perché la foto è scontornata e il compositing
-              // salta i pixel trasparenti della base.
-              quad: rect(0.2, 0.34, 0.82, 0.87),
+              // Il capo piegato offre una facciata larga: si stampa da poco sotto
+              // il colletto fino al bordo inferiore, che l'alpha della foto
+              // colloca a 0,913, con i fianchi costanti fra 0,163 e 0,866.
+              // L'area arriva appena oltre quel bordo: quello che deborda non
+              // si vede, perché il compositing salta i pixel trasparenti della
+              // base, e così la stampa ci arriva davvero a filo.
+              quad: rect(0.175, 0.35, 0.855, 0.918),
               hint: 'Facciata piegata, sotto il colletto',
             },
           ],
