@@ -3,12 +3,14 @@ import { brochure } from './brochure'
 import { laptop } from './laptop'
 import { poster } from './poster'
 import { sheets } from './sheets'
+import { tablecloth } from './tablecloth'
 import { PHOTO_MOCKUPS } from '../../photo/model'
 import type { BuildConfig, MockupDefinition } from './types'
 
 export const MOCKUPS: MockupDefinition[] = [
   ...PHOTO_MOCKUPS,
   sheets,
+  tablecloth,
   poster,
   brochure,
   book,

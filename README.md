@@ -10,8 +10,8 @@ trasparente o del colore che scegli.
 I mockup sono di due tipi. Capi, cappelli, telefoni e manifesti sono costruiti
 su **fotografie vere**: la stampa viene deformata nell'area di stampa e
 moltiplicata per la luce della foto, così pieghe e ombre della scena le passano
-sopra. Fogli, poster, brochure, libro e laptop sono **modelli 3D** generati al
-momento, che si ruotano liberamente prima di esportare.
+sopra. Fogli, tovaglia, poster, brochure, libro e laptop sono **modelli 3D**
+generati al momento, che si ruotano liberamente prima di esportare.
 
 Nessun server, nessuna registrazione: le immagini non lasciano il computer.
 
@@ -23,6 +23,7 @@ Nessun server, nessuna registrazione: le immagini non lasciano il computer.
 | **Felpa con cappuccio** | fronte, retro, fronte + retro affiancati | fronte, retro | colore libero + 18 campioni |
 | **Cappello con visiera** | baseball, snapback, dad hat, trucker | fronte, retro | colore libero + 6 campioni |
 | **Fogli sparsi** | due affiancati, due sovrapposti, tre sparsi, pila | fronte, retro (due facciate diverse) | A4, A5, Letter, quadrato, A4 orizzontale |
+| **Tovaglia da tavolo** | stesa, sul tavolo 2000 × 800 | telo intero 2500 × 1450, fascia frontale 2500 × 600 | poliestere, cotone o raso; colore libero + 8 campioni |
 | **Poster appeso** | cornice a bastone, mollette, puntine, foglio libero | grafica intera | A3, A2, A1, 50×70, 70×50, 60×60, 6×3 m |
 | **Brochure 3 ante** | piega a zeta, a rotolo, aperta, in piedi | spread interno, spread esterno | A4, DL, A5, quadrata |
 | **Libro copertina rigida** | in piedi, tre quarti, disteso, aperto | copertina, dorso, quarta (oppure le due pagine interne) | 6 formati, dorso 8–60 mm, profilo tondo/quadro, finitura tela/patinata |
@@ -96,7 +97,8 @@ src/
     textures.ts     tessuto, maglia, carta, tela, taglio pagine (canvas 2D)
     materials.ts    materiali condivisi
     viewer.ts       scena, luci, ombra, controlli, trascinamento, esportazione
-    models/         un file per mockup 3D (fogli, poster, brochure, libro, laptop)
+    models/         un file per mockup 3D (fogli, tovaglia, poster, brochure,
+                    libro, laptop)
   photo/            mockup su fotografia: basi e aree di stampa, renderer con
                     omografia, ombreggiatura e rilevamento del green screen
   components/       barra, elenco mockup, viewport, pannelli, icone SVG
@@ -105,11 +107,19 @@ src/
   lib/              caricamento immagini, download PNG/PDF
 ```
 
-Due idee reggono tutto il progetto:
+Tre idee reggono tutto il progetto:
 
 - **Superfici parametriche condivise.** Il supporto e la grafica nascono dalla
   stessa funzione `(u, v) → punto`, quindi la stampa segue esattamente la
   curvatura di poster, brochure, dorso del libro o calotta del cappello.
+- **Il tessuto drappeggiato scende di quanto sborda.** La tovaglia nasce dalle
+  coordinate del telo disteso — quelle su cui va la stampa — e la funzione le
+  porta dove finiscono una volta messe sul tavolo: piatte sul piano,
+  arrotondate sullo spigolo, verticali sulle falde. La quota di discesa è la
+  distanza percorsa *sul tessuto* oltre lo spigolo, quindi agli angoli, dove il
+  telo sborda da due lati insieme, il tessuto scende di più e si raccoglie a
+  cono invece di spalmarsi: è quello che succede davvero, e senza di esso gli
+  angoli si aprirebbero come una scatola.
 - **Mockup su fotografia, non modellati.** Capi, cappelli, telefoni e manifesti
   sono foto vere: `src/photo/` mappa la grafica nell'area di stampa con
   un'omografia — quattro punti e non un rettangolo, perché su uno scatto in

@@ -87,6 +87,16 @@ export function BookIcon({ size = 24 }: IconProps) {
   )
 }
 
+export function TableclothIcon({ size = 24 }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M5.8 6.2h12.4l2.8 2.8H3z" />
+      <path d="M3 9v6.1c3.4 1.2 14.6 1.2 18 0V9" />
+      <path d="M6.4 16v4.4M17.6 16v4.4" />
+    </svg>
+  )
+}
+
 export function UploadIcon({ size = 24 }: IconProps) {
   return (
     <svg {...base(size)}>
@@ -251,6 +261,7 @@ export const MOCKUP_ICONS: Record<string, (p: IconProps) => JSX.Element> = {
   hoodie: HoodieIcon,
   cap: CapIcon,
   sheets: SheetsIcon,
+  tablecloth: TableclothIcon,
   poster: PosterIcon,
   brochure: BrochureIcon,
   book: BookIcon,

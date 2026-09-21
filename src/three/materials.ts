@@ -38,6 +38,33 @@ export function fabricMaterial(
   )
 }
 
+/**
+ * Telo da tavolo: stesso sheen degli altri tessuti, trama più fitta perché il
+ * telo è grande e la finitura la sceglie l'utente. Il raso riflette molto e
+ * quasi non ha rilievo, il cotone è opaco e ruvido, il poliestere sta in mezzo.
+ */
+export function tableclothMaterial(
+  hex: string,
+  finish: 'poliestere' | 'cotone' | 'raso' = 'poliestere',
+) {
+  const color = new THREE.Color(hex)
+  const satin = finish === 'raso'
+  const sheenColor = color.clone().lerp(new THREE.Color('#ffffff'), satin ? 0.78 : 0.5)
+  const scale = satin ? 0.12 : finish === 'cotone' ? 0.5 : 0.3
+  return track(
+    new THREE.MeshPhysicalMaterial({
+      color,
+      roughness: satin ? 0.42 : finish === 'cotone' ? 0.94 : 0.86,
+      metalness: 0,
+      sheen: satin ? 0.9 : 0.5,
+      sheenColor,
+      sheenRoughness: satin ? 0.28 : 0.66,
+      normalMap: finish === 'cotone' ? clothNormalMap(30) : fabricNormalMap(36),
+      normalScale: new THREE.Vector2(scale, scale),
+    }),
+  )
+}
+
 export function paperMaterial(hex = '#ffffff', gloss = 0.25) {
   return track(
     new THREE.MeshStandardMaterial({
