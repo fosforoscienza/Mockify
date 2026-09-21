@@ -16,17 +16,18 @@ import {
 const S = 1 / 2000
 const mm = (v: number) => v * S
 
-/** Telo da fiera 2500 × 1450 mm, misurato disteso. */
+/** Telo da fiera 2500 × 1450 mm, misurato disteso: è lo stesso su ogni tavolo. */
 const CLOTH = { w: 2500, d: 1450 }
-/** Tavolo 2000 × 800 mm, altezza da banchetto. */
-const TABLE = { w: 2000, d: 800, h: 750, thickness: 30 }
+/** Del tavolo cambia solo la larghezza, variante per variante. */
+const TABLE = { d: 800, h: 750, thickness: 30 }
 /**
- * Quanto il telo sborda oltre il piano, misurato sul tessuto:
- * 2500 = 2000 + 2 × 250 in larghezza, 1450 = 800 + 600 + 50 in profondità.
+ * Debordo in profondità, misurato sul tessuto: 1450 = 600 + 800 + 50. Non
+ * dipende dal tavolo, perché la profondità del piano è sempre 800. Quello
+ * laterale invece sì: è quanto del telo avanza oltre la larghezza del piano.
  */
-const OVER = { front: 600, side: 250, back: 50 }
+const OVER = { front: 600, back: 50 }
+const sideOver = (tableWidth: number) => (CLOTH.w - tableWidth) / 2
 
-const HALF_W = TABLE.w / 2
 /** Spigoli del piano nelle coordinate del telo (z positivo verso chi guarda). */
 const Z_FRONT = CLOTH.d / 2 - OVER.front
 const Z_BACK = -CLOTH.d / 2 + OVER.back
@@ -38,6 +39,27 @@ const ROLL_ARC = (ROLL * Math.PI) / 2
 const FRONT_BAND = OVER.front / CLOTH.d
 
 const clamp = THREE.MathUtils.clamp
+
+/**
+ * Tavoli su cui si può appoggiare lo stesso telo. Da 2500 il telo arriva a
+ * filo dei lati e scende soltanto davanti e dietro; sotto, quanto avanza per
+ * lato lo dice la sottrazione, non una misura scritta a mano.
+ */
+const TABLES = [
+  { id: 'tavolo-180', label: 'Tavolo 180 × 80', width: 1800 },
+  { id: 'tavolo-200', label: 'Tavolo 200 × 80', width: 2000 },
+  { id: 'tavolo-250', label: 'Tavolo 250 × 80', width: 2500 },
+] as const
+
+const tableOf = (variant: string) => TABLES.find((t) => t.id === variant)
+
+/** Come sborda il telo su un piano largo `tableWidth`, in parole. */
+function overhang(tableWidth: number) {
+  const side = sideOver(tableWidth)
+  return side > 0
+    ? `sborda di ${OVER.front} mm davanti, ${side} per lato e ${OVER.back} dietro`
+    : `sborda di ${OVER.front} mm davanti e ${OVER.back} dietro, e ai lati arriva a filo del piano`
+}
 
 const FABRICS = [
   { id: 'poliestere', label: 'Poliestere opaco' },
@@ -64,17 +86,19 @@ const COLORS = [
  * *sul tessuto* oltre lo spigolo, quindi agli angoli, dove il telo sborda da
  * due lati insieme, il tessuto scende di più e si raccoglie a cono.
  */
-function drapedSurface(): SurfaceFn {
+function drapedSurface(tableWidth: number): SurfaceFn {
+  const halfW = tableWidth / 2
   return (u, v, out) => {
     const x = (u - 0.5) * CLOTH.w
     const z = (0.5 - v) * CLOTH.d
-    const ox = x > HALF_W ? x - HALF_W : x < -HALF_W ? x + HALF_W : 0
+    const ox = x > halfW ? x - halfW : x < -halfW ? x + halfW : 0
     const oz = z > Z_FRONT ? z - Z_FRONT : z < Z_BACK ? z - Z_BACK : 0
     const d = Math.hypot(ox, oz)
 
     // increspatura minima del telo appoggiato: si spegne prima dello spigolo,
-    // così non interferisce con il raccordo
-    const ripple = (Math.sin(x / 120) * Math.sin(z / 150 + 1.1) + 1) * 0.7
+    // così non interferisce con il raccordo. Parte da mezzo millimetro, che è
+    // la metà dello spessore: sotto, la faccia inferiore entrerebbe nel piano
+    const ripple = 0.5 + (Math.sin(x / 120) * Math.sin(z / 150 + 1.1) + 1) * 0.7
     if (d === 0) {
       out.set(mm(x), mm(TABLE.h + ripple), mm(z))
       return
@@ -105,7 +129,7 @@ function drapedSurface(): SurfaceFn {
 
     const fade = 1 - THREE.MathUtils.smoothstep(d, 0, 90)
     out.set(
-      mm(clamp(x, -HALF_W, HALF_W) + nx * horiz),
+      mm(clamp(x, -halfW, halfW) + nx * horiz),
       mm(TABLE.h - drop + ripple * fade),
       mm(clamp(z, Z_BACK, Z_FRONT) + nz * horiz),
     )
@@ -136,9 +160,9 @@ function frontBand(fn: SurfaceFn): SurfaceFn {
 }
 
 /** Tavolo: piano in legno e gambe a sezione quadrata. */
-function buildTable(group: THREE.Group) {
+function buildTable(group: THREE.Group, tableWidth: number) {
   const top = new THREE.Mesh(
-    new THREE.BoxGeometry(mm(TABLE.w), mm(TABLE.thickness), mm(TABLE.d)),
+    new THREE.BoxGeometry(mm(tableWidth), mm(TABLE.thickness), mm(TABLE.d)),
     woodMaterial('#c19a6b'),
   )
   top.position.set(0, mm(TABLE.h - TABLE.thickness / 2), mm(Z_TABLE))
@@ -154,7 +178,7 @@ function buildTable(group: THREE.Group) {
     for (const sz of [-1, 1]) {
       const leg = new THREE.Mesh(legGeometry, legMaterial)
       leg.position.set(
-        sx * mm(HALF_W - inset),
+        sx * mm(tableWidth / 2 - inset),
         mm(legHeight / 2),
         mm(Z_TABLE + sz * (TABLE.d / 2 - inset)),
       )
@@ -165,15 +189,15 @@ function buildTable(group: THREE.Group) {
 }
 
 function build(cfg: BuildConfig): BuiltMockup {
-  const draped = cfg.variant !== 'stesa'
+  const table = tableOf(cfg.variant)
   const fabric = optionString(cfg, 'tessuto', 'poliestere') as 'poliestere' | 'cotone' | 'raso'
   const group = new THREE.Group()
 
-  if (draped) buildTable(group)
+  if (table) buildTable(group, table.width)
 
-  const fn = draped ? drapedSurface() : flatSurface()
+  const fn = table ? drapedSurface(table.width) : flatSurface()
   const segU = 200
-  const segV = draped ? 140 : 96
+  const segV = table ? 140 : 96
   const thickness = mm(0.7)
   const { front, back, rim } = buildSheetGeometry(fn, thickness, { segU, segV })
   const cloth = tableclothMaterial(colorHex(cfg, COLORS), fabric)
@@ -226,7 +250,7 @@ function build(cfg: BuildConfig): BuiltMockup {
   return {
     group,
     slots,
-    camera: draped
+    camera: table
       ? { azimuth: deg(-18), polar: deg(72), distanceFactor: 1.04 }
       : { azimuth: deg(-14), polar: deg(34), distanceFactor: 1.0 },
     dispose() {},
@@ -237,9 +261,9 @@ export const tablecloth: MockupDefinition = {
   id: 'tovaglia',
   name: 'Tovaglia da tavolo',
   category: 'stampa',
-  tagline: 'Telo 2500 × 1450 su tavolo 2000 × 800',
+  tagline: 'Telo 2500 × 1450 su tre tavoli diversi',
   description:
-    'Telo da fiera stampato, steso o appoggiato sul tavolo: sborda di 600 mm davanti, 250 mm per lato e 50 mm dietro, e agli angoli il tessuto in eccesso scende a cono come succede davvero.',
+    'Telo da fiera stampato, steso oppure appoggiato su un tavolo largo 180, 200 o 250 cm: scende di 600 mm davanti e 50 dietro, ai lati di quanto avanza del telo, e agli angoli il tessuto in eccesso cala a cono come succede davvero.',
   icon: 'tablecloth',
   variants: [
     {
@@ -247,11 +271,11 @@ export const tablecloth: MockupDefinition = {
       label: 'Stesa',
       description: 'Telo disteso: si legge tutta la stampa, 2500 × 1450 mm.',
     },
-    {
-      id: 'tavolo',
-      label: 'Sul tavolo',
-      description: 'Appoggiata su un tavolo 2000 × 800, con il debordo reale.',
-    },
+    ...TABLES.map((t) => ({
+      id: t.id,
+      label: t.label,
+      description: `Piano ${t.width} × ${TABLE.d} mm: il telo ${overhang(t.width)}.`,
+    })),
   ],
   colors: COLORS,
   options: [

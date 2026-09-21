@@ -23,7 +23,7 @@ Nessun server, nessuna registrazione: le immagini non lasciano il computer.
 | **Felpa con cappuccio** | fronte, retro, fronte + retro affiancati | fronte, retro | colore libero + 18 campioni |
 | **Cappello con visiera** | baseball, snapback, dad hat, trucker | fronte, retro | colore libero + 6 campioni |
 | **Fogli sparsi** | due affiancati, due sovrapposti, tre sparsi, pila | fronte, retro (due facciate diverse) | A4, A5, Letter, quadrato, A4 orizzontale |
-| **Tovaglia da tavolo** | stesa, sul tavolo 2000 × 800 | tutta la tovaglia 2500 × 1450, solo fascia frontale 2500 × 600 | poliestere, cotone o raso; colore libero + 8 campioni |
+| **Tovaglia da tavolo** | stesa, su tavolo 180 × 80, 200 × 80 o 250 × 80 cm | tutta la tovaglia 2500 × 1450, solo fascia frontale 2500 × 600 | poliestere, cotone o raso; colore libero + 8 campioni |
 | **Poster appeso** | cornice a bastone, mollette, puntine, foglio libero | grafica intera | A3, A2, A1, 50×70, 70×50, 60×60, 6×3 m |
 | **Brochure 3 ante** | piega a zeta, a rotolo, aperta, in piedi | spread interno, spread esterno | A4, DL, A5, quadrata |
 | **Libro copertina rigida** | in piedi, tre quarti, disteso, aperto | copertina, dorso, quarta (oppure le due pagine interne) | 6 formati, dorso 8–60 mm, profilo tondo/quadro, finitura tela/patinata |
