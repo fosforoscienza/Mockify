@@ -208,17 +208,17 @@ function build(cfg: BuildConfig): BuiltMockup {
   const slots: SlotDefinition[] = [
     {
       id: 'telo',
-      label: 'Telo intero',
+      label: 'Tutta la tovaglia',
       area: { width: mm(CLOTH.w), height: mm(CLOTH.d) },
-      hint: `${CLOTH.w} × ${CLOTH.d} mm — tessuto disteso`,
+      hint: `${CLOTH.w} × ${CLOTH.d} mm — piano, fronte e lati in un pezzo solo`,
       meshes: [artAll],
       fullBleed: true,
     },
     {
       id: 'fronte',
-      label: 'Fascia frontale',
+      label: 'Solo fascia frontale',
       area: { width: mm(CLOTH.w), height: mm(OVER.front) },
-      hint: `${CLOTH.w} × ${OVER.front} mm — la parte che scende davanti`,
+      hint: `${CLOTH.w} × ${OVER.front} mm — soltanto la parte che scende davanti, per il logo: il resto del telo resta del colore scelto`,
       meshes: [artBand],
     },
   ]
