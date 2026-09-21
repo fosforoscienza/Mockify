@@ -11,6 +11,11 @@ export interface ArtTransform {
   rotation: number
   opacity: number
   flipX: boolean
+  /**
+   * La grafica viene deformata per riempire esattamente l'area di stampa:
+   * i due lati seguono l'area e le proporzioni dell'immagine cedono.
+   */
+  stretch: boolean
 }
 
 export const defaultTransform = (): ArtTransform => ({
@@ -20,6 +25,7 @@ export const defaultTransform = (): ArtTransform => ({
   rotation: 0,
   opacity: 1,
   flipX: false,
+  stretch: false,
 })
 
 export interface PrintAreaSize {
@@ -33,13 +39,18 @@ export interface PrintAreaSize {
  * dell'immagine. Con `cover` la grafica riempie l'area e deborda sul lato
  * lungo, invece di restarci inscritta lasciando due bande: è quello che
  * serve dove la stampa copre tutto il supporto — poster, copertine, schermi.
+ * Con `stretch` non resta né banda né debordo perché l'immagine viene
+ * deformata sui due lati dell'area.
  */
 export function artworkSize(
   area: PrintAreaSize,
   imageAspect: number,
   scale: number,
   cover = false,
+  stretch = false,
 ) {
+  // deformata: l'immagine prende le misure dell'area, senza bande né tagli
+  if (stretch) return { w: area.width * scale, h: area.height * scale }
   const areaAspect = area.width / area.height
   let w: number
   let h: number
@@ -65,7 +76,7 @@ export function computeUvMatrix(
   cover = false,
   target = new THREE.Matrix3(),
 ) {
-  const { w, h } = artworkSize(area, imageAspect, t.scale, cover)
+  const { w, h } = artworkSize(area, imageAspect, t.scale, cover, t.stretch)
   const tx = t.offsetX * area.width * 0.5
   const ty = t.offsetY * area.height * 0.5
   const cos = Math.cos(-t.rotation)

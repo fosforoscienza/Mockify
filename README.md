@@ -36,7 +36,9 @@ Nessun server, nessuna registrazione: le immagini non lasciano il computer.
    di caricamento nel pannello di destra. Ogni area di stampa ha il suo file.
 3. **Adattala**: dimensione, rotazione, posizione e opacità dal pannello, oppure
    trascina direttamente la grafica sul mockup (il resto della superficie
-   continua a far ruotare la scena).
+   continua a far ruotare la scena). Il pulsante *Adatta* la deforma perché
+   riempia esattamente l'area di stampa, senza bande né tagli; premuto di nuovo
+   la riporta alle sue proporzioni.
 4. **Scegli i colori**: quello del materiale nella barra in alto e quello dello
    sfondo nella sezione *Scena*, con campioni rapidi, selettore completo e
    contagocce per prelevare una tinta dallo schermo.

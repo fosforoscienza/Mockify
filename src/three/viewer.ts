@@ -132,6 +132,7 @@ export class MockupViewer {
           rotation: 0,
           opacity: 1,
           flipX: false,
+          stretch: false,
         },
       }
       this.slots.set(def.id, runtime)

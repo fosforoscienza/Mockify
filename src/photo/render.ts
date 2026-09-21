@@ -546,7 +546,11 @@ export class PhotoMockupRenderer {
     const cover = area.fill === 'cover'
     let fw: number
     let fh: number
-    if ((imageAspect >= areaAspect) !== cover) {
+    if (t.stretch) {
+      // deformata: i due lati riempiono l'area, le proporzioni cedono
+      fw = t.scale
+      fh = t.scale
+    } else if ((imageAspect >= areaAspect) !== cover) {
       fw = t.scale
       fh = (t.scale * areaAspect) / imageAspect
     } else {

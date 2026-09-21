@@ -222,8 +222,20 @@ export default function ArtworkPanel({
             </button>
             <button
               type="button"
-              className="btn btn-ghost btn-sm"
-              onClick={() => onPatch({ scale: 1, rotation: 0 })}
+              className={`btn btn-ghost btn-sm ${transform.stretch ? 'active' : ''}`}
+              onClick={() =>
+                onPatch(
+                  transform.stretch
+                    ? { scale: 1, rotation: 0, stretch: false }
+                    : { scale: 1, rotation: 0, offsetX: 0, offsetY: 0, stretch: true },
+                )
+              }
+              title={
+                transform.stretch
+                  ? 'Torna alle proporzioni della grafica'
+                  : 'Deforma la grafica per riempire esattamente l’area'
+              }
+              aria-pressed={transform.stretch}
             >
               <FitIcon size={15} /> Adatta
             </button>
@@ -239,7 +251,9 @@ export default function ArtworkPanel({
         </fieldset>
 
         <p className="hint">
-          Puoi anche trascinare la grafica direttamente sul mockup per posizionarla.
+          {transform.stretch
+            ? 'La grafica è deformata per riempire esattamente l’area: premi di nuovo Adatta per tornare alle sue proporzioni.'
+            : 'Puoi anche trascinare la grafica direttamente sul mockup per posizionarla.'}
         </p>
       </div>
     </>

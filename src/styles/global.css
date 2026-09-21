@@ -201,6 +201,18 @@ button {
   border-color: var(--muted);
 }
 
+/* Pulsante che tiene acceso uno stato, come Adatta quando deforma la grafica. */
+.btn-ghost.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent-bright);
+}
+
+.btn-ghost.active:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent-bright);
+}
+
 .btn-subtle {
   color: var(--ink-2);
   background: var(--panel-2);
