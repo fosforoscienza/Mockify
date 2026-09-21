@@ -1,6 +1,6 @@
 # Sagoma
 
-**In produzione: https://mockify-murex.vercel.app**
+**In produzione: https://sagoma-mockup.vercel.app**
 
 Generatore di mockup che funziona interamente nel browser: carichi le tue
 grafiche in PNG o JPG, Sagoma le adatta al modello scelto seguendo le pieghe
@@ -53,9 +53,11 @@ Nessun server, nessuna registrazione: le immagini non lasciano il computer.
 Il repository contiene `vercel.json` già pronto: framework Vite, build
 `npm run build`, output in `dist/`, rewrite di tutte le rotte su `index.html`
 (l'app usa URL puliti tipo `/crea?m=poster`) e cache immutabile sugli asset.
-Il repo è collegato al progetto Vercel `mockify`, nome rimasto da prima che
-l'app si chiamasse Sagoma: finché non viene rinominato lì, restano quel nome e
-l'indirizzo `mockify-murex.vercel.app`. Ogni push sul branch di
+Il repo è collegato al progetto Vercel `sagoma`, che pubblica su
+`sagoma-mockup.vercel.app`. Il vecchio indirizzo `mockify-murex.vercel.app` non
+è più assegnato: Vercel genera il dominio `nome-parola.vercel.app` alla
+creazione del progetto e non lo rigenera quando lo rinomini, quindi quello
+nuovo è stato aggiunto a mano e il vecchio tolto. Ogni push sul branch di
 produzione (`main`) pubblica una nuova versione, gli altri branch ottengono un
 deploy di anteprima. Non servono variabili d'ambiente: l'app è
 interamente statica e lavora nel browser.
