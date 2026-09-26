@@ -19,6 +19,7 @@ export const POSTER_FORMATS: PrintFormat[] = [
 export const SHEET_FORMATS: PrintFormat[] = [
   { id: 'a4', label: 'A4 — 210 × 297 mm', w: 210, h: 297 },
   { id: 'a5', label: 'A5 — 148 × 210 mm', w: 148, h: 210 },
+  { id: '10x21', label: '10 × 21 cm — 100 × 210 mm', w: 100, h: 210 },
   { id: 'letter', label: 'Letter — 216 × 279 mm', w: 216, h: 279 },
   { id: 'square', label: 'Quadrato — 210 × 210 mm', w: 210, h: 210 },
   { id: 'a4l', label: 'A4 orizzontale — 297 × 210 mm', w: 297, h: 210 },
