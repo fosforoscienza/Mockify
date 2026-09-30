@@ -146,7 +146,12 @@ function build(cfg: BuildConfig): BuiltMockup {
   const disposables: { dispose(): void }[] = [shadowGeometry, shadowMaterial]
 
   variant.poses.forEach((pose, i) => {
-    const fn = sheetSurface(w, h, pose.flipped ? -pose.curl : pose.curl, pose.curlSide)
+    // Il foglio girato è ruotato di 180° attorno alla verticale: in coordinate
+    // locali il suo lato sinistro finisce a destra, quindi invertiamo il lato
+    // dell'arricciatura perché curlSide resti riferito alla scena.
+    const fn = pose.flipped
+      ? sheetSurface(w, h, -pose.curl, -pose.curlSide as -1 | 1)
+      : sheetSurface(w, h, pose.curl, pose.curlSide)
     const sheet = new THREE.Group()
     const { front, back, rim } = buildSheetGeometry(fn, thickness, { segU: 56, segV: 56 })
     const fm = new THREE.Mesh(front, paper)
