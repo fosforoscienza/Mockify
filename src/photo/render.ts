@@ -66,6 +66,86 @@ function convexHull(pts: number[][]) {
 }
 
 /**
+ * Riporta gli spigoli sull'incrocio dei lati dritti.
+ *
+ * Gli estremi del guscio cadono sugli angoli arrotondati di uno schermo, e su
+ * un arco fatto di pixel il guscio ha pochi vertici: quello più vicino alla
+ * diagonale sta da una parte in un angolo e dall'altra in quello accanto. Il
+ * quadrilatero usciva così ruotato di un paio di gradi anche su un telefono
+ * perfettamente dritto, e la grafica con lui. I lati invece sono lunghi e
+ * dritti: ognuno è un lato del guscio parallelo al lato approssimato, e il
+ * loro incrocio è l'angolo vero, come se lo schermo non fosse arrotondato.
+ * Dove qualcosa passa davanti all'area il guscio scavalca la rientranza con
+ * un lato solo, che sta comunque sul bordo vero.
+ */
+function straightenSides(corners: number[][], hull: number[][]): number[][] {
+  const minParallel = Math.cos((12 * Math.PI) / 180)
+  const lines: { c: number[]; d: number[] }[] = []
+  const sideLen = (s: number) =>
+    Math.hypot(corners[(s + 1) % 4][0] - corners[s][0], corners[(s + 1) % 4][1] - corners[s][1])
+  const distToSide = (p: number[], s: number) => {
+    const a = corners[s]
+    const b = corners[(s + 1) % 4]
+    const l = sideLen(s)
+    return Math.abs((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])) / l
+  }
+  for (let s = 0; s < 4; s++) {
+    const a = corners[s]
+    const b = corners[(s + 1) % 4]
+    const len = sideLen(s)
+    if (len < 4) return corners
+    const ux = (b[0] - a[0]) / len
+    const uy = (b[1] - a[1]) / len
+    // retta dei lati del guscio scelti, pesati per la lunghezza
+    let sw = 0, mx = 0, my = 0
+    const picked: [number[], number][] = []
+    for (let i = 0; i < hull.length; i++) {
+      const p = hull[i]
+      const q = hull[(i + 1) % hull.length]
+      const el = Math.hypot(q[0] - p[0], q[1] - p[1])
+      if (el < 1) continue
+      if (Math.abs(((q[0] - p[0]) * ux + (q[1] - p[1]) * uy) / el) < minParallel) continue
+      const mid = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2]
+      let nearest = 0
+      for (let k = 1; k < 4; k++) if (distToSide(mid, k) < distToSide(mid, nearest)) nearest = k
+      if (nearest !== s) continue
+      picked.push([p, el / 2], [q, el / 2])
+      sw += el
+      mx += ((p[0] + q[0]) / 2) * el
+      my += ((p[1] + q[1]) / 2) * el
+    }
+    // un lato quasi tutto curvo non dice dove sta il bordo
+    if (sw < len * 0.3) return corners
+    mx /= sw
+    my /= sw
+    let sxx = 0, sxy = 0, syy = 0
+    for (const [p, wt] of picked) {
+      const dx = p[0] - mx
+      const dy = p[1] - my
+      sxx += dx * dx * wt
+      sxy += dx * dy * wt
+      syy += dy * dy * wt
+    }
+    const ang = 0.5 * Math.atan2(2 * sxy, sxx - syy)
+    lines.push({ c: [mx, my], d: [Math.cos(ang), Math.sin(ang)] })
+  }
+  const out: number[][] = []
+  for (let s = 0; s < 4; s++) {
+    const l1 = lines[(s + 3) % 4]
+    const l2 = lines[s]
+    const den = l1.d[0] * l2.d[1] - l1.d[1] * l2.d[0]
+    if (Math.abs(den) < 0.2) return corners
+    const t = ((l2.c[0] - l1.c[0]) * l2.d[1] - (l2.c[1] - l1.c[1]) * l2.d[0]) / den
+    const p = [l1.c[0] + t * l1.d[0], l1.c[1] + t * l1.d[1]]
+    // un incrocio lontano vuol dire lati presi male: meglio gli spigoli di prima
+    const limit = 0.25 * Math.min(sideLen((s + 3) % 4), sideLen(s))
+    if (Math.hypot(p[0] - corners[s][0], p[1] - corners[s][1]) > limit) return corners
+    out.push(p)
+  }
+  return out
+}
+
+/**
  * Spigoli di una regione. Il guscio viene ruotato sull'orientamento del
  * rettangolo di area minima: nel riferimento raddrizzato gli spigoli sono gli
  * estremi di x+y e x-y, cosa che su un soggetto inclinato non vale.
@@ -105,7 +185,7 @@ function cornersOf(hull: number[][], w: number, h: number, ratio: number): Quad 
     if (rx - ry > s4) { s4 = rx - ry; tr = p }
     if (rx - ry < s3) { s3 = rx - ry; bl = p }
   }
-  const corners = [tl, tr, br, bl]
+  const corners = straightenSides([tl, tr, br, bl], hull)
   const len = (i: number, j: number) => Math.hypot(corners[i][0] - corners[j][0], corners[i][1] - corners[j][1])
   let pick = 0
   let bestErr = Infinity

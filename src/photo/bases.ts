@@ -260,6 +260,18 @@ export const TELEFONO_PHOTO: PhotoConfig = {
       ],
     },
     {
+      id: 'fronte',
+      label: 'iPhone frontale',
+      description: 'Telefono singolo, dritto in verticale.',
+      views: [
+        {
+          // lo stesso telefono della foto fronte e retro, senza quello dietro
+          file: '01/fronte.webp',
+          areas: [schermo()],
+        },
+      ],
+    },
+    {
       id: 'inclinato-fronte-retro',
       label: 'iPhone inclinato, fronte e retro',
       views: [
